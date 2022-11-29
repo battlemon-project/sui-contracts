@@ -24,11 +24,12 @@ module contracts::random {
     public fun from_bytes(bytes: vector<u8>): u64 {
         assert!(vector::length(&bytes) >= 8, ETOO_FEW_BYTES);
 
-        let i: u8 = 0;
+        let count: u8 = 0;
         let sum: u64 = 0;
-        while (i < 8) {
-            sum = sum + (*vector::borrow(&bytes, (i as u64)) as u64) * math::pow(2, (7 - i) * 8);
-            i = i + 1;
+        while (count < 8) {
+            let value = *vector::borrow(&bytes, (count as u64));
+            sum = sum + (value as u64) * math::pow(2, (7 - count) * 8);
+            count = count + 1;
         };
 
         sum
@@ -39,5 +40,15 @@ module contracts::random {
 
         let quotient = x / divisor;
         x - (quotient * divisor)
+    }
+
+    #[test]
+    fun random_works() {
+        use sui::tx_context;
+
+        let ctx = &mut tx_context::dummy();
+        let first = rng(0, 100, ctx);
+        let second = rng(0, 100, ctx);
+        assert!(first != second, 1);
     }
 }

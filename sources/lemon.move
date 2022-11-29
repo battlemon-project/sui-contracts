@@ -1,72 +1,115 @@
-module contracts::item {
-    use sui::object::{Self, UID};
-    use sui::url::{Self, Url};
-    use std::string::{String};
-    use sui::tx_context::{Self, TxContext};
-    use contracts::item;
-    use sui::transfer;
-
-    /// `kind` - fire_arm, cold_arm etc
-    /// `flavour` - FireArms_Assault_Rifle_AA01
-    struct Item has key, store {
-        id: UID,
-        url: Url,
-        kind: String,
-        flavour: String,
-    }
-
-    public entry fun create(kind: String, flavour: String, ctx: &mut TxContext) {
-        let item = item::new(kind, flavour, ctx);
-        transfer::transfer(item, tx_context::sender(ctx));
-    }
-
-    public fun new(kind: String, flavour: String, ctx: &mut TxContext): Item {
-        Item {
-            id: object::new(ctx),
-            url: url::new_unsafe_from_bytes(b"foo"),
-            kind,
-            flavour,
-        }
-    }
-
-    public fun kind(self: &Item): String {
-        self.kind
-    }
-
-    public fun flavour(self: &Item): String {
-        self.flavour
-    }
-}
-
-
 module contracts::lemon {
     use std::string::String;
-    use contracts::lemon;
     use sui::object::{Self, UID};
     use sui::url::{Self, Url};
     use sui::tx_context::{Self as tx_ctx, TxContext};
     use sui::transfer;
     use sui::dynamic_field;
-    use contracts::traits::{Self, Traits};
+    use contracts::trait::{Self, Trait};
     use contracts::equipment::{Self, Equipment};
     use contracts::item::{Self, Item};
+
 
     // ------------------------ERRORS----------------------
     const EItemProhibbitedForAdding: u64 = 256;
 
     // ------------------------Structs---------------------
 
+    struct Flavour has store, drop, copy {
+        name: String,
+        weight: u8,
+    }
+
     struct Lemon has key {
         id: UID,
         url: Url,
-        traits: Traits,
+        traits: vector<Trait<String, String>>
     }
 
     struct AdminCap has key {
         id: UID,
     }
 
-    // --------------------functions-----------------------
+    // ================Public EntryPoints=====================
+
+    fun populate_lemon_trait_registry(registry: &mut Registry<Lemon, String, Flavour>) {
+        // exo
+        let exo_flavours = &mut vector::empty<Flavour>();
+        vector::push_back(
+            exo_flavours,
+            new_flavour(b"Exo_Steel_Exoskeleton_AA01", 127)
+        );
+        vector::push_back(
+            exo_flavours,
+            new_flavour(b"Exo_Snowwhite_Exoskeleton_AA02", 255)
+        );
+        let group_name = string::utf8(b"exo");
+        registry::add<Lemon, String, Flavour>(registry, group_name, *exo_flavours);
+        // eyes
+        let eyes_flavours = &mut vector::empty<Flavour>();
+        vector::push_back(
+            eyes_flavours,
+            new_flavour(b"Eyes_Blue_AA01", 127)
+        );
+        vector::push_back(
+            eyes_flavours,
+            new_flavour(b"Eyes_Green_AA02", 255)
+        );
+        let group_name = string::utf8(b"eyes");
+        registry::add<Lemon, String, Flavour>(registry, group_name, *eyes_flavours);
+        // head
+        let head_flavours = &mut vector::empty<Flavour>();
+        vector::push_back(
+            head_flavours,
+            new_flavour(b"Head_Fresh_Lemon_AA01", 127)
+        );
+        vector::push_back(
+            head_flavours,
+            new_flavour(b"Head_Zombie_ZA01", 255)
+        );
+        let group_name = string::utf8(b"head");
+        registry::add<Lemon, String, Flavour>(registry, group_name, *head_flavours);
+        // face
+        let face_flavours = &mut vector::empty<Flavour>();
+        vector::push_back(
+            face_flavours,
+            new_flavour(b"Face_Ninja_Balaclava_NA_01", 63)
+        );
+        vector::push_back(
+            face_flavours,
+            new_flavour(b"Face_Gas_Mask_MA01", 126)
+        );
+        vector::push_back(
+            face_flavours,
+            new_flavour(b"Face_Cowboy_Scarf_CA01", 189)
+        );
+        vector::push_back(
+            face_flavours,
+            new_flavour(b"Face_Sunglasses_RA01", 255)
+        );
+        let group_name = string::utf8(b"face");
+        registry::add<Lemon, String, Flavour>(registry, group_name, *face_flavours);
+        //teeth
+        let teeth_flavours = &mut vector::empty<Flavour>();
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Grga_AA02", 63)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Hollywood_AA01", 126)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Oldstyle_AA04", 189)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Sharp_AA03", 255)
+        );
+        let group_name = string::utf8(b"teeth");
+        registry::add<Lemon, String, Flavour>(registry, group_name, *teeth_flavours);
+    }
 
     /// Temploray solution for the ability to test init function while this problem
     /// https://github.com/MystenLabs/sui/issues/6185 is not solved
@@ -74,11 +117,15 @@ module contracts::lemon {
         let admin = AdminCap {
             id: object::new(ctx),
         };
-
-        let permitted_equipment = equipment::new(ctx);
+        let id = object::new(ctx);
+        let seed = hash::sha3_256(object::uid_to_bytes(&id));
+        let trait_registry = registry::new<Lemon, String, Flavour>(id, option::some(seed));
+        populate_lemon_trait_registry(&mut trait_registry);
+        let item_registry = equipment::new(ctx);
 
         transfer::transfer(admin, tx_context::sender(ctx));
-        transfer::share_object(permitted_equipment);
+        transfer::share_object(trait_registry);
+        transfer::share_object(item_registry);
     }
 
     // todo: add one-time witness initialization
@@ -87,28 +134,65 @@ module contracts::lemon {
     }
 
 
-    public fun new(ctx: &mut TxContext): Lemon {
+    fun new_lemon(
+        registry: &mut Registry<Lemon, String, Flavour>,
+        ctx: &mut TxContext
+    ): Lemon {
         Lemon {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: traits::new(ctx),
+            traits: generate_traits(registry, ctx),
         }
     }
 
-    // ---------------------ENTRY POINTS--------------------------
-    public entry fun create(ctx: &mut TxContext) {
-        let lemon = lemon::new(ctx);
+    fun generate_traits(
+        registry: &mut Registry<Lemon, String, Flavour>,
+        ctx: &mut TxContext
+    ): vector<Trait<String, String>> {
+        registry::update_seed(registry, ctx);
+        let traits = vector::empty();
+        let traits_groups = registry::borrow_traits_groups(registry);
+        let seed = registry::borrow_seed(registry);
+
+        let i = 0;
+        while (i < vector::length(traits_groups)) {
+            let trait_group = vector::borrow(traits_groups, i);
+            let chance = vector::borrow(seed, i);
+            let j = 0;
+            // let
+            // while (j < vector::length(trait_group))
+        };
+
+        traits
+    }
+
+    // ================Public EntryPoints=====================
+    public entry fun create_lemon(registry: &mut Registry<Lemon, String, Flavour>, ctx: &mut TxContext) {
+        let lemon = new_lemon(registry, ctx);
         transfer::transfer(lemon, tx_ctx::sender(ctx))
     }
 
-    // ---------------------ADMIN---------------------------------
+    // ================Admin=====================
 
-    public entry fun permit_new_item(
-        _: &mut AdminCap,
+    entry fun permit_new_item(
+        _: &AdminCap,
         equipment: &mut Equipment,
         item_flavour: String,
     ) {
         equipment::add(equipment, item_flavour);
+    }
+
+    entry fun add_trait(
+        _: &AdminCap,
+        registry: &mut Registry<Lemon, String, Flavour>
+    ) {}
+
+    // ================Helpers=====================
+    fun new_flavour(name: vector<u8>, weight: u8): Flavour {
+        Flavour {
+            name: string::utf8(name),
+            weight
+        }
     }
 
     // ----------------------Owner--------------------------------------
@@ -134,6 +218,12 @@ module contracts::lemon {
     #[test_only]
     use std::string::utf8;
     use sui::tx_context;
+    use contracts::registry::Registry;
+    use contracts::registry;
+    use std::option;
+    use std::string;
+    use std::vector;
+    use std::hash;
 
     #[test]
     fun init_success() {
@@ -182,7 +272,7 @@ module contracts::lemon {
                 utf8(b"bar"),
                 ctx
             );
-            lemon::create(ctx);
+            lemon::create_lemon(ctx);
         };
         test_scenario::next_tx(scenario, alice());
         {
@@ -213,7 +303,7 @@ module contracts::lemon {
                 flavour,
                 ctx
             );
-            lemon::create(ctx);
+            lemon::create_lemon(ctx);
             let admin = test_scenario::take_from_sender<AdminCap>(scenario);
             let permitted = test_scenario::take_shared<Equipment>(scenario);
             lemon::permit_new_item(
@@ -242,7 +332,7 @@ module contracts::lemon {
         let scenario = &mut scenario_val;
         let ctx = test_scenario::ctx(scenario);
         {
-            lemon::create(ctx);
+            lemon::create_lemon(ctx);
         };
         test_scenario::next_tx(scenario, alice());
         {
@@ -258,8 +348,8 @@ module contracts::lemon {
         let scenario = &mut scenario_val;
         let ctx = test_scenario::ctx(scenario);
         {
-            lemon::create(ctx);
-            lemon::create(ctx);
+            lemon::create_lemon(ctx);
+            lemon::create_lemon(ctx);
         };
         test_scenario::next_tx(scenario, alice());
         {

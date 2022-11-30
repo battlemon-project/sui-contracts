@@ -10,10 +10,18 @@ module contracts::weapon {
     use sui::transfer;
 
     // ================Types=====================
-    struct Weapon has key, store {
+    struct Any {}
+
+    struct Parent {}
+
+    struct Child {}
+
+    struct Weapon<phantom Marker> has key, store {
         id: UID,
         url: Url,
         traits: vector<Trait<String, String>>,
+        // mix_cost: u64,
+        // children: u64,
     }
 
     // struct Flavour has store, drop, copy {
@@ -33,27 +41,14 @@ module contracts::weapon {
     //     registry::add(registry, kind, flavours)
     // }
 
+    // ================Init=====================
     fun init(ctx: &mut TxContext) {
-        let registry = registry::create<Weapon, String, Flavour<String>>(ctx);
+        let registry = registry::create<Weapon<Any>, String, Flavour<String>>(ctx);
         populate_registry(&mut registry);
         transfer::share_object(registry);
     }
 
-    fun new_weapon(
-        registry: &mut Registry<Weapon, String, Flavour<String>>,
-        ctx: &mut TxContext,
-    ): Weapon {
-        Weapon {
-            id: object::new(ctx),
-            url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: trait::from_registry<Weapon, String, String>(registry, ctx),
-        }
-    }
-
-
-    // ================Helpers=====================
-
-    fun populate_registry(registry: &mut Registry<Weapon, String, Flavour<String>>) {
+    fun populate_registry(registry: &mut Registry<Weapon<Any>, String, Flavour<String>>) {
         // receiver
         let receiver_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -77,7 +72,7 @@ module contracts::weapon {
             new_flavour(b"receiver5", 255)
         );
         let group_name = string::utf8(b"receiver");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *receiver_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *receiver_flavours);
         // magazine
         let magazine_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -101,7 +96,7 @@ module contracts::weapon {
             new_flavour(b"magazine5", 255)
         );
         let group_name = string::utf8(b"magazine");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *magazine_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *magazine_flavours);
         // barrel
         let barrel_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -125,7 +120,7 @@ module contracts::weapon {
             new_flavour(b"barrel5", 255)
         );
         let group_name = string::utf8(b"barrel");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *barrel_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *barrel_flavours);
         // muzzle
         let muzzle_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -149,7 +144,7 @@ module contracts::weapon {
             new_flavour(b"muzzle5", 255)
         );
         let group_name = string::utf8(b"muzzle");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *muzzle_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *muzzle_flavours);
         // sight
         let sight_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -173,7 +168,7 @@ module contracts::weapon {
             new_flavour(b"sight5", 255)
         );
         let group_name = string::utf8(b"sight");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *sight_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *sight_flavours);
         // grip
         let grip_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -197,14 +192,42 @@ module contracts::weapon {
             new_flavour(b"grip5", 255)
         );
         let group_name = string::utf8(b"grip");
-        registry::add<Weapon, String, Flavour<String>>(registry, group_name, *grip_flavours);
+        registry::add<Weapon<Any>, String, Flavour<String>>(registry, group_name, *grip_flavours);
     }
 
-    // ================Public EntryPoints=====================
-    public entry fun create_weapon(registry: &mut Registry<Weapon, String, Flavour<String>>, ctx: &mut TxContext) {
-        let weapon = new_weapon(registry, ctx);
+
+    // ================Public Entrypoints=====================
+    public entry fun create_parent_weapon(
+        registry: &mut Registry<Weapon<Any>, String, Flavour<String>>,
+        ctx: &mut TxContext
+    ) {
+        let weapon = new_weapon<Parent>(registry, ctx);
         transfer::transfer(weapon, tx_context::sender(ctx))
     }
+
+    public entry fun mix_weapons(
+        registry: &mut Registry<Weapon<Any>, String, Flavour<String>>,
+        first: &mut Weapon<Parent>,
+        second: &mut Weapon<Parent>,
+        ctx: &mut TxContext,
+    ) {}
+
+    // ================Helpers=====================
+    fun new_weapon<Marker>(
+        registry: &mut Registry<Weapon<Any>, String, Flavour<String>>,
+        ctx: &mut TxContext,
+    ): Weapon<Marker> {
+        Weapon {
+            id: object::new(ctx),
+            url: url::new_unsafe_from_bytes(b"foo.bar"),
+            traits: trait::from_registry<Weapon<Any>, String, String>(registry, ctx),
+        }
+    }
+
+    fun split_last(raw_flavour: vector<u8>): (u8, vector<u8>) {
+        (vector::pop_back(&mut raw_flavour), raw_flavour)
+    }
+
     // fun into_flavours(raw_flavours: vector<vector<u8>>): vector<Flavour> {
     //     let flavours = vector::empty();
     //
@@ -221,8 +244,4 @@ module contracts::weapon {
     //
     //     flavours
     // }
-
-    fun split_last(raw_flavour: vector<u8>): (u8, vector<u8>) {
-        (vector::pop_back(&mut raw_flavour), raw_flavour)
-    }
 }

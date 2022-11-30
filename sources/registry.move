@@ -14,12 +14,13 @@ module contracts::registry {
     struct Registry<phantom Kind, Name, Entry> has key, store {
         id: UID,
         groups: vector<Group<Name, Entry>>,
-        seed: Option<vector<u8>>
+        seed: Option<vector<u8>>,
+        // count: Option<u64>,
     }
 
     public fun new<Kind, Name, Entry>(
         id: UID,
-        seed: Option<vector<u8>>
+        seed: Option<vector<u8>>,
     ): Registry<Kind, Name, Entry> {
         Registry<Kind, Name, Entry> {
             id,

@@ -40,56 +40,6 @@ module contracts::lemon {
         transfer::share_object(registry);
     }
 
-
-    // ================Public EntryPoints=====================
-    public entry fun create_lemon(registry: &mut Registry<Lemon, String, Flavour<String>>, ctx: &mut TxContext) {
-        let lemon = new_lemon(registry, ctx);
-        transfer::transfer(lemon, tx_context::sender(ctx))
-    }
-
-    // ================Admin=====================
-
-    entry fun permit_new_item(
-        _: &AdminCap,
-        equipment: &mut Equipment,
-        item_flavour: String,
-    ) {
-        equipment::add(equipment, item_flavour);
-    }
-
-    entry fun add_trait(
-        _: &AdminCap,
-        _registry: &mut Registry<Lemon, String, Flavour<String>>
-    ) {}
-
-    public entry fun add_item(permitted: &Equipment, lemon: &mut Lemon, item: Item) {
-        let flavour = item::flavour(&item);
-        assert!(equipment::contains(permitted, flavour), EItemProhibbitedForAdding);
-        let kind = item::kind(&item);
-        dynamic_field::add(&mut lemon.id, kind, item);
-    }
-
-    public entry fun remove_item(lemon: &mut Lemon, item_kind: String, ctx: &mut TxContext) {
-        let item: Item = dynamic_field::remove(&mut lemon.id, item_kind);
-        transfer::transfer(item, tx_context::sender(ctx));
-    }
-
-    // ================Helpers=====================
-    fun new_lemon(
-        registry: &mut Registry<Lemon, String, Flavour<String>>,
-        ctx: &mut TxContext,
-    ): Lemon {
-        Lemon {
-            id: object::new(ctx),
-            url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: trait::from_registry<Lemon, String, String>(registry, ctx),
-        }
-    }
-
-    public fun new_flavour(name: vector<u8>, weight: u64): Flavour<String> {
-        trait::new_flavour(string::utf8(name), option::some(weight))
-    }
-
     fun populate_registry(registry: &mut Registry<Lemon, String, Flavour<String>>) {
         // exo
         let exo_flavours = &mut vector::empty<Flavour<String>>();
@@ -167,6 +117,56 @@ module contracts::lemon {
         );
         let group_name = string::utf8(b"teeth");
         registry::add<Lemon, String, Flavour<String>>(registry, group_name, *teeth_flavours);
+    }
+
+
+    // ================Public EntryPoints=====================
+    public entry fun create_lemon(registry: &mut Registry<Lemon, String, Flavour<String>>, ctx: &mut TxContext) {
+        let lemon = new_lemon(registry, ctx);
+        transfer::transfer(lemon, tx_context::sender(ctx))
+    }
+
+    // ================Admin=====================
+
+    entry fun permit_new_item(
+        _: &AdminCap,
+        equipment: &mut Equipment,
+        item_flavour: String,
+    ) {
+        equipment::add(equipment, item_flavour);
+    }
+
+    entry fun add_trait(
+        _: &AdminCap,
+        _registry: &mut Registry<Lemon, String, Flavour<String>>
+    ) {}
+
+    public entry fun add_item(permitted: &Equipment, lemon: &mut Lemon, item: Item) {
+        let flavour = item::flavour(&item);
+        assert!(equipment::contains(permitted, flavour), EItemProhibbitedForAdding);
+        let kind = item::kind(&item);
+        dynamic_field::add(&mut lemon.id, kind, item);
+    }
+
+    public entry fun remove_item(lemon: &mut Lemon, item_kind: String, ctx: &mut TxContext) {
+        let item: Item = dynamic_field::remove(&mut lemon.id, item_kind);
+        transfer::transfer(item, tx_context::sender(ctx));
+    }
+
+    // ================Helpers=====================
+    fun new_lemon(
+        registry: &mut Registry<Lemon, String, Flavour<String>>,
+        ctx: &mut TxContext,
+    ): Lemon {
+        Lemon {
+            id: object::new(ctx),
+            url: url::new_unsafe_from_bytes(b"foo.bar"),
+            traits: trait::from_registry<Lemon, String, String>(registry, ctx),
+        }
+    }
+
+    public fun new_flavour(name: vector<u8>, weight: u64): Flavour<String> {
+        trait::new_flavour(string::utf8(name), option::some(weight))
     }
 
 

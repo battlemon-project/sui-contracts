@@ -6,41 +6,46 @@ module contracts::registry {
     use std::option;
     use sui::tx_context::TxContext;
     use std::hash;
-    use contracts::trait_group::TraitsGroup;
-    use contracts::trait_group;
+    use contracts::group::{Self, Group};
 
     // ==========Error=============
     const ERegistrySeedIsNone: u64 = 1001;
 
-    /// registry for arbitrary type
-    struct Registry<phantom Kind, Name, Flavour> has key, store {
+    struct Registry<phantom Kind, Name, Entry> has key, store {
         id: UID,
-        traits_groups: vector<TraitsGroup<Name, Flavour>>,
+        groups: vector<Group<Name, Entry>>,
         seed: Option<vector<u8>>
     }
 
-    public fun new<Kind, Name, Flavour>(
+    public fun new<Kind, Name, Entry>(
         id: UID,
         seed: Option<vector<u8>>
-    ): Registry<Kind, Name, Flavour> {
-        Registry<Kind, Name, Flavour> {
+    ): Registry<Kind, Name, Entry> {
+        Registry<Kind, Name, Entry> {
             id,
-            traits_groups: vector::empty(),
+            groups: vector::empty(),
             seed,
         }
     }
 
-    public fun add<Kind, Name: store + drop + copy, Flavour: store + drop + copy>(
-        registry: &mut Registry<Kind, Name, Flavour>,
-        name: Name,
-        flavours: vector<Flavour>
-    ) {
-        let group = trait_group::new(name, flavours);
-        vector::push_back(&mut registry.traits_groups, group);
+    public fun create<Kind, Name, Entry>(ctx: &mut TxContext): Registry<Kind, Name, Entry> {
+        let id = object::new(ctx);
+        let seed = hash::sha3_256(object::uid_to_bytes(&id));
+
+        new<Kind, Name, Entry>(id, option::some(seed))
     }
 
-    public fun update_seed<Kind, Name: store + drop + copy, Flavour: store + drop + copy>(
-        registry: &mut Registry<Kind, Name, Flavour>,
+    public fun add<Kind, Name: store, Entry: store>(
+        registry: &mut Registry<Kind, Name, Entry>,
+        name: Name,
+        flavours: vector<Entry>
+    ) {
+        let group = group::new(name, flavours);
+        vector::push_back(&mut registry.groups, group);
+    }
+
+    public fun update_seed<Kind, Name, Entry>(
+        registry: &mut Registry<Kind, Name, Entry>,
         ctx: &mut TxContext,
     ) {
         assert!(option::is_some(&registry.seed), ERegistrySeedIsNone);
@@ -51,14 +56,14 @@ module contracts::registry {
         object::delete(id);
     }
 
-    public fun borrow_traits_groups<Kind, Name: store + drop + copy, Flavour: store + drop + copy>(
-        registry: &Registry<Kind, Name, Flavour>,
-    ): &vector<TraitsGroup<Name, Flavour>> {
-        &registry.traits_groups
+    public fun borrow_traits_groups<Kind, Name, Entry>(
+        registry: &Registry<Kind, Name, Entry>,
+    ): &vector<Group<Name, Entry>> {
+        &registry.groups
     }
 
-    public fun borrow_seed<Kind, Name: store + drop + copy, Flavour: store + drop + copy>(
-        registry: &Registry<Kind, Name, Flavour>,
+    public fun borrow_seed<Kind, Name, Entry>(
+        registry: &Registry<Kind, Name, Entry>,
     ): &vector<u8> {
         option::borrow(&registry.seed)
     }

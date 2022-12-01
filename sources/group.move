@@ -1,5 +1,5 @@
 module contracts::group {
-    struct Group<Name, Entry> has store {
+    struct Group<Name, Entry> has store, copy {
         name: Name,
         entries: vector<Entry>
     }

@@ -1,52 +1,76 @@
 module contracts::registry {
-    use sui::object::UID;
-    use std::option::Option;
+    use sui::object::{Self, UID};
+    use std::option::{Self, Option};
     use std::vector;
-    use sui::object;
-    use std::option;
     use sui::tx_context::TxContext;
     use std::hash;
-    use contracts::group::{Self, Group};
+    use sui::vec_map::{Self, VecMap};
 
     // ==========Error=============
     const ERegistrySeedIsNone: u64 = 1001;
 
-    struct Registry<phantom Kind, Name, Entry> has key, store {
+    struct Registry<phantom Kind, Key: copy + drop, Value: copy + drop> has key, store {
         id: UID,
-        groups: vector<Group<Name, Entry>>,
+        content: VecMap<Key, vector<Value>>,
         seed: Option<vector<u8>>,
         // count: Option<u64>,
     }
 
-    public fun new<Kind, Name, Entry>(
+    public fun new<Kind, Key: copy + drop, Value: copy + drop>(
         id: UID,
         seed: Option<vector<u8>>,
-    ): Registry<Kind, Name, Entry> {
-        Registry<Kind, Name, Entry> {
+    ): Registry<Kind, Key, Value> {
+        Registry<Kind, Key, Value> {
             id,
-            groups: vector::empty(),
+            content: vec_map::empty(),
             seed,
         }
     }
 
-    public fun create<Kind, Name, Entry>(ctx: &mut TxContext): Registry<Kind, Name, Entry> {
+    public fun create<Kind, Key: copy + drop, Value: copy + drop>(
+        ctx: &mut TxContext,
+    ): Registry<Kind, Key, Value> {
         let id = object::new(ctx);
         let seed = hash::sha3_256(object::uid_to_bytes(&id));
 
-        new<Kind, Name, Entry>(id, option::some(seed))
+        new<Kind, Key, Value>(id, option::some(seed))
     }
 
-    public fun add<Kind, Name: store, Entry: store>(
-        registry: &mut Registry<Kind, Name, Entry>,
-        name: Name,
-        flavours: vector<Entry>
+    public fun add_or_insert<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &mut Registry<Kind, Key, Value>,
+        key: &Key,
+        value: Value,
     ) {
-        let group = group::new(name, flavours);
-        vector::push_back(&mut registry.groups, group);
+        let content = &mut registry.content;
+        let idx_opt = vec_map::get_idx_opt<Key, vector<Value>>(content, key);
+        if (option::is_none(&idx_opt)) {
+            let values = vector::singleton(value);
+            vec_map::insert(content, *key, values);
+        } else {
+            let idx = option::extract(&mut idx_opt);
+            let (_, values) = vec_map::get_entry_by_idx_mut(content, idx);
+            vector::push_back(values, value);
+        };
     }
 
-    public fun update_seed<Kind, Name, Entry>(
-        registry: &mut Registry<Kind, Name, Entry>,
+    public fun append<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &mut Registry<Kind, Key, Value>,
+        key: &Key,
+        values: vector<Value>,
+    ) {
+        let content = &mut registry.content;
+        let idx_opt = vec_map::get_idx_opt<Key, vector<Value>>(content, key);
+        if (option::is_none(&idx_opt)) {
+            vec_map::insert(content, *key, values);
+        } else {
+            let idx = option::extract(&mut idx_opt);
+            let (_, old_values) = vec_map::get_entry_by_idx_mut(content, idx);
+            vector::append(old_values, values);
+        };
+    }
+
+    public fun update_seed<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &mut Registry<Kind, Key, Value>,
         ctx: &mut TxContext,
     ) {
         assert!(option::is_some(&registry.seed), ERegistrySeedIsNone);
@@ -57,15 +81,39 @@ module contracts::registry {
         object::delete(id);
     }
 
-    public fun borrow_traits_groups<Kind, Name, Entry>(
-        registry: &Registry<Kind, Name, Entry>,
-    ): &vector<Group<Name, Entry>> {
-        &registry.groups
+    public fun get<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+        key: &Key,
+    ): Option<vector<Value>> {
+        let content = &registry.content;
+        let idx_opt = vec_map::get_idx_opt(content, key);
+        if (option::is_none(&idx_opt)) {
+            option::none<vector<Value>>()
+        } else {
+            let idx = option::extract(&mut idx_opt);
+            let (_, values) = vec_map::get_entry_by_idx(content, idx);
+            option::some(*values)
+        }
     }
 
-    public fun borrow_seed<Kind, Name, Entry>(
-        registry: &Registry<Kind, Name, Entry>,
-    ): &vector<u8> {
-        option::borrow(&registry.seed)
+    public fun get_entry_by_idx<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+        idx: u64,
+    ): (&Key, &vector<Value>) {
+        let content = &registry.content;
+        vec_map::get_entry_by_idx(content, idx)
+    }
+
+    public fun size<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+    ): u64 {
+        let content = &registry.content;
+        vec_map::size(content)
+    }
+
+    public fun seed<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+    ): Option<vector<u8>> {
+        registry.seed
     }
 }

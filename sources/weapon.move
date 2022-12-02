@@ -8,42 +8,34 @@ module contracts::weapon {
     use std::vector;
     use contracts::lemon::new_flavour;
     use sui::transfer;
+    use sui::bag::length;
 
     // ================Types=====================
-    struct WeaponTraits {}
+    // Registry Key
+    struct Weapons {}
 
-    struct WeaponKinds {}
-
-    // ================Family Statuses====================
+    // Family Statuses
     struct Any {}
 
     struct Parent {}
 
     struct Child {}
 
-    // ===============WeaponKind==========================
-    // struct SubmachineGun {}
-    // struct MachinePistol {}
-    // struct MachineGun {}
-    // struct MachinePistol {}
+    // Weapon key for indexing in registry
     struct WeaponKey<Kind, TraitName> has copy, store, drop {
         kind: Kind,
         trait: TraitName,
     }
 
-    struct Weapon<phantom FamilyStatus, Kind> has key, store {
+    // Weapon NFT token
+    struct Weapon<phantom FamilyStatus> has key, store {
         id: UID,
         url: Url,
         traits: vector<Trait<String, String>>,
-        kind: Kind
+        kind: String,
         // mix_cost: u64,
         // children: u64,
     }
-
-    // struct Flavour has store, drop, copy {
-    //     name: String,
-    //     weight: u8,
-    // }
 
     // ================Admin=====================
     // entry fun add_trait(
@@ -59,13 +51,13 @@ module contracts::weapon {
 
     // ================Init=====================
     fun init(ctx: &mut TxContext) {
-        let registry = registry::create<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(ctx);
+        let registry = registry::create<Weapons, WeaponKey<String, String>, Flavour<String>>(ctx);
         populate_submachine_gun_registry(&mut registry);
         transfer::share_object(registry);
     }
 
     fun populate_submachine_gun_registry(
-        registry: &mut Registry<WeaponTraits, WeaponKey<String, String>, Flavour<String>>
+        registry: &mut Registry<Weapons, WeaponKey<String, String>, Flavour<String>>
     ) {
         let kind = string::utf8(b"submachine_gun");
 
@@ -97,7 +89,7 @@ module contracts::weapon {
             kind,
         };
 
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *receiver_flavours
@@ -131,7 +123,7 @@ module contracts::weapon {
             kind,
         };
 
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *magazine_flavours
@@ -164,7 +156,7 @@ module contracts::weapon {
             trait: string::utf8(b"barrel"),
             kind,
         };
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *barrel_flavours
@@ -197,7 +189,7 @@ module contracts::weapon {
             kind,
         };
 
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *muzzle_flavours
@@ -230,7 +222,7 @@ module contracts::weapon {
             trait: string::utf8(b"sight"),
             kind,
         };
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *sight_flavours
@@ -263,7 +255,7 @@ module contracts::weapon {
             kind,
         };
 
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *grip_flavours
@@ -296,7 +288,7 @@ module contracts::weapon {
             kind,
             trait: string::utf8(b"butt"),
         };
-        registry::append<WeaponTraits, WeaponKey<String, String>, Flavour<String>>(
+        registry::append<Weapons, WeaponKey<String, String>, Flavour<String>>(
             registry,
             &weapon_key,
             *butt_flavours
@@ -306,10 +298,10 @@ module contracts::weapon {
 
     // ================Public Entrypoints=====================
     public entry fun create_parent_weapon(
-        registry: &mut Registry<WeaponTraits, String, Flavour<String>>,
+        registry: &mut Registry<Weapons, WeaponKey<String, String>, Flavour<String>>,
         ctx: &mut TxContext
     ) {
-        let weapon = new_weapon<Parent, String>(registry, ctx);
+        let weapon = new_weapon<Parent>(registry, ctx);
         transfer::transfer(weapon, tx_context::sender(ctx))
     }
 
@@ -324,19 +316,42 @@ module contracts::weapon {
     // }
 
     // ================Helpers=====================
-    fun new_weapon<FamilyStatus, Kind>(
-        registry: &mut Registry<WeaponTraits, String, Flavour<String>>,
+    fun new_weapon<FamilyStatus>(
+        registry: &mut Registry<Weapons, WeaponKey<String, String>, Flavour<String>>,
+        kind: vector<u8>,
         ctx: &mut TxContext,
-    ): Weapon<FamilyStatus, vector<u8>> {
-        let kind = b"";
+    ): Weapon<FamilyStatus> {
+        let traits = trait::from_registry(registry, ctx);
+        let kind = string::utf8(kind);
+        let traits = filter_map_traits(&mut traits, kind);
         Weapon {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: trait::from_registry<WeaponTraits, String, String>(registry, ctx),
+            traits,
             kind,
         }
     }
 
+    fun filter_map_traits<Kind, TraitName, FlavourName>(
+        traits: &mut vector<Trait<WeaponKey<Kind, TraitName>, FlavourName>>,
+        kind: Kind,
+    ): vector<Trait<TraitName, FlavourName>> {
+        let ret = vector::empty();
+
+        let i = 0;
+        while (i < vector::length(traits)) {
+            let trait = vector::borrow(traits, i);
+            let (weapon_key, flavour) = trait::destroy_trait(*trait);
+            let WeaponKey<Kind, TraitName> { kind: weapon_kind, trait } = weapon_key;
+            if (weapon_kind == kind) {
+                vector::push_back(&mut ret, trait::new_trait(trait, flavour))
+            };
+
+            i = i + 1;
+        };
+
+        ret
+    }
     // fun mix(
     //     registry: &mut Registry<WeaponTraits, String, Flavour<String>>,
     //     first: &mut Weapon<Parent>,

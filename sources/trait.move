@@ -33,6 +33,11 @@ module contracts::trait {
         }
     }
 
+    public fun destroy_trait<TraitName, FlavourName>(self: Trait<TraitName, FlavourName>): (TraitName, FlavourName) {
+        let Trait { name, flavour } = self;
+        (name, flavour)
+    }
+
     public fun from_registry<Kind, TraitName: copy + drop, FlavourName: copy + drop>(
         registry: &mut Registry<Kind, TraitName, Flavour<FlavourName>>,
         ctx: &mut TxContext

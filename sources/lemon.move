@@ -166,7 +166,7 @@ module contracts::lemon {
         Lemon {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: trait::from_registry<LemonTraits, String, String>(registry, ctx),
+            traits: trait::generate_all<LemonTraits, String, String>(registry, ctx),
         }
     }
 

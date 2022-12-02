@@ -321,7 +321,7 @@ module contracts::weapon {
         kind: Kind,
         ctx: &mut TxContext,
     ): Weapon<FamilyStatus, Kind, TraitName, FlavourName> {
-        let traits = trait::from_registry(registry, ctx);
+        let traits = trait::generate_all(registry, ctx);
         let traits = filter_map_traits(&mut traits, kind);
         Weapon {
             id: object::new(ctx),
@@ -351,8 +351,9 @@ module contracts::weapon {
 
         ret
     }
+
     // fun mix(
-    //     registry: &mut Registry<WeaponTraits, String, Flavour<String>>,
+    //     registry: &mut Registry<Weapons, String, Flavour<String>>,
     //     first: &mut Weapon<Parent>,
     //     second: &mut Weapon<Parent>,
     //     ctx: &mut TxContext,

@@ -8,7 +8,6 @@ module contracts::weapon {
     use std::vector;
     use contracts::lemon::new_flavour;
     use sui::transfer;
-    use sui::bag::length;
 
     // ================Types=====================
     // Registry Key
@@ -28,11 +27,11 @@ module contracts::weapon {
     }
 
     // Weapon NFT token
-    struct Weapon<phantom FamilyStatus> has key, store {
+    struct Weapon<phantom FamilyStatus, Kind, TraitName, FlavourName> has key, store {
         id: UID,
         url: Url,
-        traits: vector<Trait<String, String>>,
-        kind: String,
+        traits: vector<Trait<TraitName, FlavourName>>,
+        kind: Kind,
         // mix_cost: u64,
         // children: u64,
     }
@@ -51,7 +50,7 @@ module contracts::weapon {
 
     // ================Init=====================
     fun init(ctx: &mut TxContext) {
-        let registry = registry::create<Weapons, WeaponKey<String, String>, Flavour<String>>(ctx);
+        let registry = registry::create(ctx);
         populate_submachine_gun_registry(&mut registry);
         transfer::share_object(registry);
     }
@@ -299,9 +298,10 @@ module contracts::weapon {
     // ================Public Entrypoints=====================
     public entry fun create_parent_weapon(
         registry: &mut Registry<Weapons, WeaponKey<String, String>, Flavour<String>>,
+        kind: String,
         ctx: &mut TxContext
     ) {
-        let weapon = new_weapon<Parent>(registry, ctx);
+        let weapon: Weapon<Parent, String, String, String> = new_weapon(registry, kind, ctx);
         transfer::transfer(weapon, tx_context::sender(ctx))
     }
 
@@ -316,13 +316,12 @@ module contracts::weapon {
     // }
 
     // ================Helpers=====================
-    fun new_weapon<FamilyStatus>(
-        registry: &mut Registry<Weapons, WeaponKey<String, String>, Flavour<String>>,
-        kind: vector<u8>,
+    fun new_weapon<FamilyStatus, Kind: copy + drop, TraitName: copy + drop, FlavourName: copy + drop>(
+        registry: &mut Registry<Weapons, WeaponKey<Kind, TraitName>, Flavour<FlavourName>>,
+        kind: Kind,
         ctx: &mut TxContext,
-    ): Weapon<FamilyStatus> {
+    ): Weapon<FamilyStatus, Kind, TraitName, FlavourName> {
         let traits = trait::from_registry(registry, ctx);
-        let kind = string::utf8(kind);
         let traits = filter_map_traits(&mut traits, kind);
         Weapon {
             id: object::new(ctx),
@@ -332,7 +331,7 @@ module contracts::weapon {
         }
     }
 
-    fun filter_map_traits<Kind, TraitName, FlavourName>(
+    fun filter_map_traits<Kind: copy + drop, TraitName: copy + drop, FlavourName: copy + drop>(
         traits: &mut vector<Trait<WeaponKey<Kind, TraitName>, FlavourName>>,
         kind: Kind,
     ): vector<Trait<TraitName, FlavourName>> {

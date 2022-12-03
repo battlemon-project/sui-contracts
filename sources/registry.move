@@ -96,6 +96,14 @@ module contracts::registry {
         }
     }
 
+    public fun get_unwrap<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+        key: &Key,
+    ): vector<Value> {
+        let ret = get(registry, key);
+        option::extract(&mut ret)
+    }
+
     public fun get_entry_by_idx<Kind, Key: copy + drop, Value: copy + drop>(
         registry: &Registry<Kind, Key, Value>,
         idx: u64,
@@ -115,5 +123,11 @@ module contracts::registry {
         registry: &Registry<Kind, Key, Value>,
     ): Option<vector<u8>> {
         registry.seed
+    }
+
+    public fun seed_unwrap<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &mut Registry<Kind, Key, Value>,
+    ): vector<u8> {
+        option::extract(&mut registry.seed)
     }
 }

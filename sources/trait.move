@@ -1,11 +1,11 @@
 module contracts::trait {
-    use contracts::registry::Registry;
     use sui::tx_context::TxContext;
-    use contracts::registry;
+    use contracts::registry::{Self, Registry};
     use std::vector;
-    use contracts::trait;
     use std::option::{Self, Option};
-    use std::hash::{Self};
+    use contracts::iter;
+    use std::hash;
+    use contracts::trait;
 
     /// ===========Constants============
     const MutationChance: u8 = 5;
@@ -58,11 +58,11 @@ module contracts::trait {
         let i = 0;
         while (i < registry::size(registry)) {
             let (trait, flavours) = registry::get_entry_by_idx(registry, i);
+            let chance = vector::borrow(seed, i);
+            let flavours_it = iter::from(*flavours);
 
-            let j = 0;
-            while (j < vector::length(flavours)) {
-                let chance = vector::borrow(seed, i);
-                let flavour = vector::borrow(flavours, j);
+            while (iter::has_next(&flavours_it)) {
+                let flavour = iter::next_unwrap(&mut flavours_it);
                 let flavour_weight = option::borrow(&flavour.weight);
 
                 if ((*chance as u64) <= *flavour_weight) {
@@ -70,7 +70,6 @@ module contracts::trait {
                     vector::push_back(&mut ret, ret_trait);
                     break
                 };
-                j = j + 1;
             };
             i = i + 1;
         };
@@ -84,32 +83,17 @@ module contracts::trait {
         ctx: &mut TxContext
     ): Option<Trait<TraitName, FlavourName>> {
         registry::update_seed(registry, ctx);
-        let seed_opt = registry::seed(registry);
-        let seed = option::borrow(&seed_opt);
+        let seed = registry::seed_unwrap(registry);
         let ret = option::none<Trait<TraitName, FlavourName>>();
+        let flavours_opt = registry::get<Kind, TraitName, Flavour<FlavourName>>(registry, name);
 
-        let trait_group_opt = registry::get<Kind, TraitName, Flavour<FlavourName>>(registry, name);
-
-        if (option::is_none(&trait_group_opt)) {
+        if (option::is_none(&flavours_opt)) {
             return ret
         };
 
-        let flavours = option::borrow(&trait_group_opt);
+        let flavours = option::extract(&mut flavours_opt);
 
-        let i = 0;
-        while (i < vector::length(flavours)) {
-            let chance = vector::borrow(seed, i);
-            let flavour = vector::borrow(flavours, i);
-            let flavour_weight = option::borrow(&flavour.weight);
-
-            if ((*chance as u64) <= *flavour_weight) {
-                return option::some(trait::new_trait(*name, flavour.name))
-            };
-
-            i = i + 1;
-        };
-
-        ret
+        handle_flavours(&flavours, &seed, name)
     }
 
     public fun generate_by_idx<Kind, TraitName: copy + drop, FlavourName: copy + drop>(
@@ -118,25 +102,10 @@ module contracts::trait {
         ctx: &mut TxContext
     ): Option<Trait<TraitName, FlavourName>> {
         registry::update_seed(registry, ctx);
-        let seed_opt = registry::seed(registry);
-        let seed = option::borrow(&seed_opt);
+        let seed = registry::seed_unwrap(registry);
         let (trait, flavours) = registry::get_entry_by_idx<Kind, TraitName, Flavour<FlavourName>>(registry, idx);
-        let i = 0;
-        let ret = option::none();
 
-        while (i < vector::length(flavours)) {
-            let chance = vector::borrow(seed, i);
-            let flavour = vector::borrow(flavours, i);
-            let flavour_weight = option::borrow(&flavour.weight);
-
-            if ((*chance as u64) <= *flavour_weight) {
-                let trait = trait::new_trait(*trait, flavour.name);
-                return option::some(trait)
-            };
-
-            i = i + 1;
-        };
-        ret
+        handle_flavours(flavours, &seed, trait)
     }
 
     public fun mix<Kind, TraitName: copy + drop, FlavourName: copy + drop>(
@@ -180,6 +149,28 @@ module contracts::trait {
             };
             vector::push_back(&mut ret, trait);
             i = i + 1;
+        };
+
+        ret
+    }
+
+    fun handle_flavours<TraitName: copy + drop, FlavourName: copy + drop>(
+        flavours: &vector<Flavour<FlavourName>>,
+        weights: &vector<u8>,
+        name: &TraitName,
+    ): Option<Trait<TraitName, FlavourName>> {
+        let ret = option::none();
+        let flavours_it = iter::from(*flavours);
+        let weights_it = iter::from(*weights);
+        while (iter::has_next(&flavours_it)) {
+            let chance = iter::next_unwrap(&mut weights_it);
+            let flavour = iter::next_unwrap(&mut flavours_it);
+            let flavour_weight = option::borrow(&flavour.weight);
+
+            if ((chance as u64) <= *flavour_weight) {
+                let trait = trait::new_trait(*name, flavour.name);
+                return option::some(trait)
+            };
         };
 
         ret

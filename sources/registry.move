@@ -127,7 +127,7 @@ module contracts::registry {
 
     public fun seed_unwrap<Kind, Key: copy + drop, Value: copy + drop>(
         registry: &mut Registry<Kind, Key, Value>,
-    ): vector<u8> {
-        option::extract(&mut registry.seed)
+    ): &vector<u8> {
+        option::borrow(&registry.seed)
     }
 }

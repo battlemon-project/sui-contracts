@@ -51,26 +51,27 @@ module contracts::trait {
         ctx: &mut TxContext
     ): vector<Trait<TraitName, FlavourName>> {
         registry::update_seed(registry, ctx);
-        let seed_opt = registry::seed(registry);
-        let seed = option::borrow(&seed_opt);
+        let seed = registry::seed_unwrap(registry);
+        let seed_it = iter::from(*seed);
         let ret = vector::empty();
 
         let i = 0;
         while (i < registry::size(registry)) {
             let (trait, flavours) = registry::get_entry_by_idx(registry, i);
-            let chance = vector::borrow(seed, i);
+            let chance = iter::next_unwrap(&mut seed_it);
             let flavours_it = iter::from(*flavours);
 
             while (iter::has_next(&flavours_it)) {
                 let flavour = iter::next_unwrap(&mut flavours_it);
                 let flavour_weight = option::borrow(&flavour.weight);
 
-                if ((*chance as u64) <= *flavour_weight) {
+                if ((chance as u64) <= *flavour_weight) {
                     let ret_trait = trait::new_trait(*trait, flavour.name);
                     vector::push_back(&mut ret, ret_trait);
                     break
                 };
             };
+
             i = i + 1;
         };
 
@@ -93,7 +94,7 @@ module contracts::trait {
 
         let flavours = option::extract(&mut flavours_opt);
 
-        handle_flavours(&flavours, &seed, name)
+        handle_flavours(&flavours, seed, name)
     }
 
     public fun generate_by_idx<Kind, TraitName: copy + drop, FlavourName: copy + drop>(
@@ -105,7 +106,7 @@ module contracts::trait {
         let seed = registry::seed_unwrap(registry);
         let (trait, flavours) = registry::get_entry_by_idx<Kind, TraitName, Flavour<FlavourName>>(registry, idx);
 
-        handle_flavours(flavours, &seed, trait)
+        handle_flavours(flavours, seed, trait)
     }
 
     public fun mix<Kind, TraitName: copy + drop, FlavourName: copy + drop>(
@@ -125,8 +126,7 @@ module contracts::trait {
         );
 
         registry::update_seed(registry, ctx);
-        let seed_opt = registry::seed(registry);
-        let seed = option::borrow(&seed_opt);
+        let seed = registry::seed_unwrap(registry);
 
         let parent_traits_choice_seed = derive(seed, 0);
         let mutation_chance_seed = derive(seed, 1);
@@ -147,6 +147,7 @@ module contracts::trait {
                 let mutation = trait::generate_by_idx(registry, i, ctx);
                 trait = option::extract(&mut mutation);
             };
+
             vector::push_back(&mut ret, trait);
             i = i + 1;
         };
@@ -182,11 +183,8 @@ module contracts::trait {
         value: u8,
         idx: u64,
     ): &Trait<TraitName, FlavourName> {
-        if (value <= 127) {
-            vector::borrow(first_parent, idx)
-        } else {
-            vector::borrow(second_parent, idx)
-        }
+        if (value <= 127) vector::borrow(first_parent, idx)
+        else vector::borrow(second_parent, idx)
     }
 
     fun derive(seed: &vector<u8>, path: u8): vector<u8> {

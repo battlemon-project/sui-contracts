@@ -8,6 +8,14 @@ module contracts::weapon {
     use std::vector;
     use contracts::lemon::new_flavour;
     use sui::transfer;
+    use contracts::iter;
+    use sui::coin::Coin;
+    use contracts::juice::JUICE;
+    use sui::coin;
+
+    // ================Errors=====================
+    const EParentsKindsAreNotSame: u64 = 2001;
+    const EJuiceAmountNotCorrect: u64 = 2002;
 
     // ================Types=====================
     // Registry Key
@@ -27,13 +35,14 @@ module contracts::weapon {
     }
 
     // Weapon NFT token
-    struct Weapon<phantom FamilyStatus, Kind, TraitName, FlavourName> has key, store {
+    struct Weapon<phantom FamilyStatus, Kind, Rarity, TraitName, FlavourName> has key, store {
         id: UID,
         url: Url,
         traits: vector<Trait<TraitName, FlavourName>>,
         kind: Kind,
-        // mix_cost: u64,
-        // children: u64,
+        rarity: Rarity,
+        mix_cost: u64,
+        children: u64,
     }
 
     // ================Admin=====================
@@ -301,33 +310,55 @@ module contracts::weapon {
         kind: String,
         ctx: &mut TxContext
     ) {
-        let weapon: Weapon<Parent, String, String, String> = new_weapon(registry, kind, ctx);
+        let weapon: Weapon<Parent, String, String, String, String>
+            = new_weapon(registry, kind, ctx);
+
         transfer::transfer(weapon, tx_context::sender(ctx))
     }
 
-    // public entry fun mix_weapons(
-    //     registry: &mut Registry<WeaponTraits, String, Flavour<String>>,
-    //     first: &mut Weapon<Parent, String>,
-    //     second: &mut Weapon<Parent, String>,
-    //     ctx: &mut TxContext,
-    // ) {
-    //     let weapon = mix(registry, first, second, ctx);
-    //     transfer::transfer(weapon, tx_context::sender(ctx))
-    // }
+    public entry fun mix_weapons(
+        registry: &mut Registry<Weapons, String, Flavour<String>>,
+        first_parent: &mut Weapon<Parent, String, String, String, String>,
+        second_parent: &mut Weapon<Parent, String, String, String, String>,
+        coin: Coin<JUICE>,
+        ctx: &mut TxContext,
+    ) {
+        let mix_price = (first_parent.mix_cost + second_parent.mix_cost);
+        assert!(coin::value(&coin) == mix_price, EJuiceAmountNotCorrect);
+
+        let weapon: Weapon<Child, String, String, String, String> = mix(
+            registry,
+            first_parent,
+            second_parent,
+            ctx
+        );
+
+        first_parent.mix_cost = first_parent.mix_cost + 1;
+        first_parent.children = first_parent.children + 1;
+        second_parent.mix_cost = second_parent.mix_cost + 1;
+        second_parent.children = second_parent.children + 1;
+
+        transfer::transfer(weapon, tx_context::sender(ctx));
+        transfer::transfer(coin, tx_context::sender(ctx));
+    }
 
     // ================Helpers=====================
     fun new_weapon<FamilyStatus, Kind: copy + drop, TraitName: copy + drop, FlavourName: copy + drop>(
         registry: &mut Registry<Weapons, WeaponKey<Kind, TraitName>, Flavour<FlavourName>>,
         kind: Kind,
         ctx: &mut TxContext,
-    ): Weapon<FamilyStatus, Kind, TraitName, FlavourName> {
+    ): Weapon<FamilyStatus, Kind, String, TraitName, FlavourName> {
         let traits = trait::generate_all(registry, ctx);
         let traits = filter_map_traits(&mut traits, kind);
+
         Weapon {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo.bar"),
+            rarity: string::utf8(b"normal"),
             traits,
             kind,
+            mix_cost: 3,
+            children: 0,
         }
     }
 
@@ -336,31 +367,45 @@ module contracts::weapon {
         kind: Kind,
     ): vector<Trait<TraitName, FlavourName>> {
         let ret = vector::empty();
-
-        let i = 0;
-        while (i < vector::length(traits)) {
-            let trait = vector::borrow(traits, i);
-            let (weapon_key, flavour) = trait::destroy_trait(*trait);
+        let traits_it = iter::from(*traits);
+        while (iter::has_next(&traits_it)) {
+            let trait = iter::next_unwrap(&mut traits_it);
+            let (weapon_key, flavour) = trait::destroy_trait(trait);
             let WeaponKey<Kind, TraitName> { kind: weapon_kind, trait } = weapon_key;
             if (weapon_kind == kind) {
                 vector::push_back(&mut ret, trait::new_trait(trait, flavour))
             };
-
-            i = i + 1;
         };
 
         ret
     }
 
-    // fun mix(
-    //     registry: &mut Registry<Weapons, String, Flavour<String>>,
-    //     first: &mut Weapon<Parent>,
-    //     second: &mut Weapon<Parent>,
-    //     ctx: &mut TxContext,
-    // ): Weapon<Child> {
-    //     registry::update_seed(registry, ctx);
-    //     let seed = registry::borrow_seed(registry);
-    // }
+    fun mix<Kind: copy + drop, TraitName: copy + drop, FlavourName: copy + drop>(
+        registry: &mut Registry<Weapons, TraitName, Flavour<FlavourName>>,
+        first_parent: &mut Weapon<Parent, Kind, String, TraitName, FlavourName>,
+        second_parent: &mut Weapon<Parent, Kind, String, TraitName, FlavourName>,
+        ctx: &mut TxContext,
+    ): Weapon<Child, Kind, String, TraitName, FlavourName> {
+        let weapon_kind = first_parent.kind;
+        assert!(weapon_kind == second_parent.kind, EParentsKindsAreNotSame);
+
+        let traits = trait::mix<Weapons, TraitName, FlavourName>(
+            registry,
+            &first_parent.traits,
+            &second_parent.traits,
+            ctx
+        );
+
+        Weapon {
+            id: object::new(ctx),
+            url: url::new_unsafe_from_bytes(b"foo"),
+            traits,
+            kind: weapon_kind,
+            rarity: string::utf8(b"hybrid"),
+            mix_cost: 0,
+            children: 0,
+        }
+    }
 
     fun split_last(raw_flavour: vector<u8>): (u8, vector<u8>) {
         (vector::pop_back(&mut raw_flavour), raw_flavour)

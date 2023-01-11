@@ -13,6 +13,7 @@ module contracts::registry {
         id: UID,
         content: VecMap<Key, vector<Value>>,
         seed: Option<vector<u8>>,
+        counter: u64,
         // count: Option<u64>,
     }
 
@@ -24,6 +25,7 @@ module contracts::registry {
             id,
             content: vec_map::empty(),
             seed,
+            counter: 0,
         }
     }
 

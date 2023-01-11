@@ -73,7 +73,7 @@ module contracts::lemon {
         );
         vector::push_back(
             eyes_flavours,
-            new_flavour(b"Eyes_Green_AA02", 255)
+            new_flavour(b"Eyes_Zombie_ZA01", 255)
         );
         let group_name = string::utf8(b"eyes");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *eyes_flavours);
@@ -82,124 +82,47 @@ module contracts::lemon {
         let head_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             head_flavours,
-            new_flavour(b"Head_Fresh_Lemon_AA01", 255)
+            new_flavour(b"Head_Fresh_Lemon_AA01", 64)
         );
-        // vector::push_back(
-        //     head_flavours,
-        //     new_flavour(b"Head_Zombie_ZA01", 255)
-        // );
+        vector::push_back(
+            head_flavours,
+            new_flavour(b"Head_Zombie_ZA01", 128)
+        );
+        vector::push_back(
+            head_flavours,
+            new_flavour(b"Head_Clementine_AA02", 192)
+        );
+        vector::push_back(
+            head_flavours,
+            new_flavour(b"Head_Lime_AA03", 255)
+        );
         let group_name = string::utf8(b"head");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *head_flavours);
 
-        // face
-        let face_flavours = &mut vector::empty<Flavour<String>>();
-        // vector::push_back(
-        //     face_flavours,
-        //     new_flavour(b"Face_Ninja_Balaclava_NA_01", 63)
-        // );
-        vector::push_back(
-            face_flavours,
-            new_flavour(b"Face_Gas_Mask_MA01", 126)
-        );
-        // vector::push_back(
-        //     face_flavours,
-        //     new_flavour(b"Face_Cowboy_Scarf_CA01", 189)
-        // );
-        vector::push_back(
-            face_flavours,
-            new_flavour(b"Face_Sunglasses_RA01", 255)
-        );
-        let group_name = string::utf8(b"face");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *face_flavours);
-
         //teeth
         let teeth_flavours = &mut vector::empty<Flavour<String>>();
-        // vector::push_back(
-        //     teeth_flavours,
-        //     new_flavour(b"Teeth_Grga_AA02", 63)
-        // );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Hollywood_AA01", 255)
+            new_flavour(b"Teeth_Grga_AA02", 51)
         );
-        // vector::push_back(
-        //     teeth_flavours,
-        //     new_flavour(b"Teeth_Oldstyle_AA04", 189)
-        // );
-        // vector::push_back(
-        //     teeth_flavours,
-        //     new_flavour(b"Teeth_Sharp_AA03", 255)
-        // );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Hollywood_AA01", 102)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Oldstyle_AA04", 153)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Sharp_AA03", 204)
+        );
+        vector::push_back(
+            teeth_flavours,
+            new_flavour(b"Teeth_Grillz_Silver_RA01", 255)
+        );
         let group_name = string::utf8(b"teeth");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *teeth_flavours);
-
-        //back
-        let back_flavours = &mut vector::empty<Flavour<String>>();
-        vector::push_back(
-            back_flavours,
-            new_flavour(b"Back_Insecticide_Bottle_ZA01", 83)
-        );
-        vector::push_back(
-            back_flavours,
-            new_flavour(b"Back_Bomb_Barrel_PA02", 166)
-        );
-        vector::push_back(
-            back_flavours,
-            new_flavour(b"Back_Tactical_Backpack_MA01", 255)
-        );
-        let group_name = string::utf8(b"back");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *back_flavours);
-
-        //cap
-        let cap_flavours = &mut vector::empty<Flavour<String>>();
-        vector::push_back(
-            cap_flavours,
-            new_flavour(b"Cap_Cone_Armored_Hat_NA03", 64)
-        );
-        vector::push_back(
-            cap_flavours,
-            new_flavour(b"Cap_Sheriff_Hat_CA02", 128)
-        );
-        vector::push_back(
-            cap_flavours,
-            new_flavour(b"Cap_Assault_Helmet_MA01", 191)
-        );
-        vector::push_back(
-            cap_flavours,
-            new_flavour(b"Cap_Pirate_Bandana_PA02", 255)
-        );
-        let group_name = string::utf8(b"cap");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *cap_flavours);
-
-        //cloth
-        let cloth_flavours = &mut vector::empty<Flavour<String>>();
-        vector::push_back(
-            cloth_flavours,
-            new_flavour(b"Cloth_Poncho_CA01", 127)
-        );
-        vector::push_back(
-            cloth_flavours,
-            new_flavour(b"Cloth_Bandolier_MA02", 255)
-        );
-        let group_name = string::utf8(b"cloth");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *cloth_flavours);
-
-        //weapon
-        let weapon_flavours = &mut vector::empty<Flavour<String>>();
-        vector::push_back(
-            weapon_flavours,
-            new_flavour(b"FireArms_Handgun_SMG_AA04", 85)
-        );
-        vector::push_back(
-            weapon_flavours,
-            new_flavour(b"ColdArms_Katana_NA01", 170)
-        );
-        vector::push_back(
-            weapon_flavours,
-            new_flavour(b"FireArms_Sniper_Rifle_AA05", 255)
-        );
-        let group_name = string::utf8(b"weapon");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *weapon_flavours);
     }
 
 

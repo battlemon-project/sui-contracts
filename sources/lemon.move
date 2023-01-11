@@ -197,6 +197,14 @@ module contracts::lemon {
     // ================Public EntryPoints=====================
     public entry fun create_lemon(registry: &mut Registry<Lemons, String, Flavour<String>>, ctx: &mut TxContext) {
         let lemon = new_lemon(registry, ctx);
+
+        emit(LemonCreated {
+            id: object::id(&lemon),
+            created: lemon.created,
+            url: lemon.url,
+            traits: lemon.traits,
+        });
+
         transfer::transfer(lemon, tx_context::sender(ctx))
     }
 
@@ -232,10 +240,13 @@ module contracts::lemon {
         registry: &mut Registry<Lemons, String, Flavour<String>>,
         ctx: &mut TxContext,
     ): Lemon {
+        registry::increment_counter(registry);
+
         Lemon {
             id: object::new(ctx),
-            url: url::new_unsafe_from_bytes(b"foo.bar"),
-            traits: trait::generate_all<Lemons, String, String>(registry, ctx),
+            created: registry::counter(registry),
+            url: url::new_unsafe_from_bytes(b"https://promo.battlemon.com/assets/default-lemon.png"),
+            traits: trait::generate_all<Lemons, String, String>(registry, ctx)
         }
     }
 
@@ -243,6 +254,13 @@ module contracts::lemon {
         trait::new_flavour(string::utf8(name), option::some(weight))
     }
 
+    // ====================Events================================================
+    struct LemonCreated has copy, drop {
+        id: ID,
+        created: u64,
+        url: Url,
+        traits: vector<Trait<String, String>>
+    }
 
     // -----------------------TEST------------------------------------------------
     #[test_only]
@@ -253,6 +271,7 @@ module contracts::lemon {
     use contracts::test_helpers::{alice};
     #[test_only]
     use std::string::utf8;
+    use sui::event::emit;
 
     #[test]
     fun init_success() {

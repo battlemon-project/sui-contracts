@@ -1,7 +1,7 @@
 module contracts::lemon {
     use std::string::{Self, String};
     use sui::url::{Self, Url};
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
     use contracts::trait::{Self, Trait, Flavour};
     use contracts::equipment::{Self, Equipment};
@@ -19,9 +19,10 @@ module contracts::lemon {
     // ------------------------Structs---------------------
     struct Lemons {}
 
-    struct Lemon has key {
+    struct Lemon has key, store {
         id: UID,
         url: Url,
+        created: u64,
         traits: vector<Trait<String, String>>
     }
 
@@ -47,21 +48,29 @@ module contracts::lemon {
         let exo_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             exo_flavours,
-            new_flavour(b"Exo_Steel_Exoskeleton_AA01", 255)
+            new_flavour(b"Exo_Snowwhite_Exoskeleton_AA02", 85)
         );
-        // vector::push_back(
-        //     exo_flavours,
-        //     new_flavour(b"Exo_Snowwhite_Exoskeleton_AA02", 255)
-        // );
+        vector::push_back(
+            exo_flavours,
+            new_flavour(b"Exo_Steel_Exoskeleton_AA01", 170)
+        );
+        vector::push_back(
+            exo_flavours,
+            new_flavour(b"Exo_Military_Exoskeleton_MA01", 255)
+        );
         let group_name = string::utf8(b"exo");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *exo_flavours);
 
         // eyes
         let eyes_flavours = &mut vector::empty<Flavour<String>>();
-        // vector::push_back(
-        //     eyes_flavours,
-        //     new_flavour(b"Eyes_Blue_AA01", 127)
-        // );
+        vector::push_back(
+            eyes_flavours,
+            new_flavour(b"Eyes_Blue_AA01", 85)
+        );
+        vector::push_back(
+            eyes_flavours,
+            new_flavour(b"Eyes_Green_AA02", 170)
+        );
         vector::push_back(
             eyes_flavours,
             new_flavour(b"Eyes_Green_AA02", 255)

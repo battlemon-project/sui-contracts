@@ -132,4 +132,16 @@ module contracts::registry {
     ): &vector<u8> {
         option::borrow(&registry.seed)
     }
+
+    public fun increment_counter<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &mut Registry<Kind, Key, Value>,
+    ) {
+        registry.counter = registry.counter + 1;
+    }
+
+    public fun counter<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+    ): u64 {
+        registry.counter
+    }
 }

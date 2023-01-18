@@ -12,6 +12,7 @@ module contracts::lemon {
     use std::vector;
     use std::option;
 
+    friend contracts::pool;
 
     // ------------------------ERRORS----------------------
     const EItemProhibbitedForAdding: u64 = 256;
@@ -21,6 +22,12 @@ module contracts::lemon {
 
     struct Lemon has key, store {
         id: UID,
+        url: Url,
+        created: u64,
+        traits: vector<Trait<String, String>>
+    }
+
+    struct Blueprint has store, drop {
         url: Url,
         created: u64,
         traits: vector<Trait<String, String>>
@@ -125,7 +132,6 @@ module contracts::lemon {
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *teeth_flavours);
     }
 
-
     // ================Public EntryPoints=====================
     public entry fun create_lemon(registry: &mut Registry<Lemons, String, Flavour<String>>, ctx: &mut TxContext) {
         let lemon = new_lemon(registry, ctx);
@@ -168,22 +174,51 @@ module contracts::lemon {
     }
 
     // ================Helpers=====================
-    fun new_lemon(
+    public(friend) fun new_lemon(
         registry: &mut Registry<Lemons, String, Flavour<String>>,
         ctx: &mut TxContext,
     ): Lemon {
         registry::increment_counter(registry);
 
-        Lemon {
-            id: object::new(ctx),
-            created: registry::counter(registry),
-            url: url::new_unsafe_from_bytes(b"https://promo.battlemon.com/assets/default-lemon.png"),
-            traits: trait::generate_all<Lemons, String, String>(registry, ctx)
-        }
+        let blueprint = new_blueprint(registry, ctx);
+        from_blueprint(blueprint, ctx)
     }
 
     public fun new_flavour(name: vector<u8>, weight: u64): Flavour<String> {
         trait::new_flavour(string::utf8(name), option::some(weight))
+    }
+
+    public(friend) fun from_blueprint(blueprint: Blueprint, ctx: &mut TxContext): Lemon {
+        Lemon {
+            id: object::new(ctx),
+            created: blueprint.created,
+            url: blueprint.url,
+            traits: blueprint.traits,
+        }
+    }
+
+    public(friend) fun into_blueprint(lemon: Lemon): Blueprint {
+        let Lemon { id, created, url, traits } = lemon;
+        object::delete(id);
+
+        Blueprint {
+            created,
+            url,
+            traits
+        }
+    }
+
+    public(friend) fun new_blueprint(
+        registry: &mut Registry<Lemons, String, Flavour<String>>,
+        ctx: &mut TxContext
+    ): Blueprint {
+        registry::increment_counter(registry);
+
+        Blueprint {
+            created: registry::counter(registry),
+            url: url::new_unsafe_from_bytes(b"https://promo.battlemon.com/assets/default-lemon.png"),
+            traits: trait::generate_all<Lemons, String, String>(registry, ctx)
+        }
     }
 
     // ====================Events================================================

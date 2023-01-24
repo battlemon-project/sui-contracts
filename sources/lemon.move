@@ -4,7 +4,6 @@ module contracts::lemon {
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
     use contracts::trait::{Self, Trait, Flavour};
-    use contracts::equipment::{Self, Equipment};
     use contracts::item::{Self, Item, Items};
     use contracts::registry::{Self, Registry};
     use sui::dynamic_field;
@@ -146,29 +145,27 @@ module contracts::lemon {
 
     // ================Admin=====================
 
-    entry fun permit_new_item(
-        _: &AdminCap,
-        equipment: &mut Equipment,
-        item_flavour: String,
-    ) {
-        equipment::add(equipment, item_flavour);
-    }
-
     entry fun add_trait(
         _: &AdminCap,
         _registry: &mut Registry<Lemon, String, Flavour<String>>
     ) {}
 
-    public entry fun add_item(registry: &Registry<Items, String, Flavour<String>>, lemon: &mut Lemon, item: Item) {
-        let flavour = item::flavour(&item);
-        let flavour = new_flavour(*string::bytes(&flavour), *option::none<u64>());
+    public entry fun add_item(
+        registry: &Registry<Items, String, Flavour<String>>,
+        lemon: &mut Lemon,
+        item: Item<String, String>
+    ) {
+        let traits = item::traits(&item);
+        let trait = vector::pop_back(&mut traits);
+        let trait_name = trait::name(&trait);
+        let trait_flavour = trait::flavour(&trait);
+        let flavour = new_flavour(*string::bytes(&trait_flavour), 0);
         assert!(registry::contains_value(registry, flavour), EItemProhibbitedForAdding);
-        let kind = item::kind(&item);
-        dynamic_field::add(&mut lemon.id, kind, item);
+        dynamic_field::add(&mut lemon.id, trait_name, item);
     }
 
     public entry fun remove_item(lemon: &mut Lemon, item_kind: String, ctx: &mut TxContext) {
-        let item: Item = dynamic_field::remove(&mut lemon.id, item_kind);
+        let item: Item<String, String> = dynamic_field::remove(&mut lemon.id, item_kind);
         transfer::transfer(item, tx_context::sender(ctx));
     }
 

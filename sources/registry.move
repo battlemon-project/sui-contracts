@@ -153,7 +153,7 @@ module contracts::registry {
         while (idx < size(registry)) {
             let (_, values) = vec_map::get_entry_by_idx(&registry.content, idx);
             if (vector::contains(values, &value)) {
-                return true;
+                return true
             };
             idx = idx + 1;
         };

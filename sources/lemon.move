@@ -5,7 +5,7 @@ module contracts::lemon {
     use sui::tx_context::{Self, TxContext};
     use contracts::trait::{Self, Trait, Flavour};
     use contracts::equipment::{Self, Equipment};
-    use contracts::item::{Self, Item};
+    use contracts::item::{Self, Item, Items};
     use contracts::registry::{Self, Registry};
     use sui::dynamic_field;
     use sui::transfer;
@@ -159,9 +159,10 @@ module contracts::lemon {
         _registry: &mut Registry<Lemon, String, Flavour<String>>
     ) {}
 
-    public entry fun add_item(permitted: &Equipment, lemon: &mut Lemon, item: Item) {
+    public entry fun add_item(registry: &Registry<Items, String, Flavour<String>>, lemon: &mut Lemon, item: Item) {
         let flavour = item::flavour(&item);
-        assert!(equipment::contains(permitted, flavour), EItemProhibbitedForAdding);
+        let flavour = new_flavour(*string::bytes(&flavour), *option::none<u64>());
+        assert!(registry::contains_value(registry, flavour), EItemProhibbitedForAdding);
         let kind = item::kind(&item);
         dynamic_field::add(&mut lemon.id, kind, item);
     }

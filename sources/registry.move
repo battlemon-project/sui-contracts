@@ -5,7 +5,6 @@ module contracts::registry {
     use sui::tx_context::TxContext;
     use std::hash;
     use sui::vec_map::{Self, VecMap};
-    use contracts::iter;
 
     // ==========Error=============
     const ERegistrySeedIsNone: u64 = 1001;

@@ -6,7 +6,7 @@ module contracts::item {
     use sui::transfer;
     use contracts::registry::{Self, Registry};
     use std::vector;
-    use contracts::trait::{Self, Flavour};
+    use contracts::trait::{Self, Flavour, Trait};
     use sui::event::emit;
     use contracts::random;
     use std::option;
@@ -14,11 +14,10 @@ module contracts::item {
     // ====Types====
     struct Items {}
 
-    struct Item has key, store {
+    struct Item<TraitName, TraitFlavour> has key, store {
         id: UID,
         url: Url,
-        kind: String,
-        flavour: String,
+        traits: vector<Trait<TraitName, TraitFlavour>>
     }
 
     // ====Init====
@@ -237,33 +236,41 @@ module contracts::item {
         emit(ItemCreated {
             id: object::id(&item),
             url: item.url,
-            kind: item.kind,
-            flavour: item.flavour,
+            traits: item.traits,
         });
         transfer::transfer(item, tx_context::sender(ctx));
     }
 
     // ====Helpers====
-    public fun new_item(registry: &mut Registry<Items, String, Flavour<String>>, ctx: &mut TxContext): Item {
+    public fun new_item(
+        registry: &mut Registry<Items, String, Flavour<String>>,
+        ctx: &mut TxContext
+    ): Item<String, String> {
         let registry_size = registry::size(registry);
         let idx = random::rng(0, registry_size, ctx);
         let trait_opt = trait::generate_by_idx(registry, idx, ctx);
         let trait = option::extract(&mut trait_opt);
+        let traits = vector::empty();
+        vector::push_back(&mut traits, trait);
         Item {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo"),
-            kind: trait::name(&trait),
-            flavour: trait::flavour(&trait),
+            traits,
         }
     }
 
-    public fun kind(self: &Item): String {
-        self.kind
+    public fun traits<TraitName: copy, TraitFlavour: copy>(
+        self: &Item<TraitName, TraitFlavour>
+    ): vector<Trait<TraitName, TraitFlavour>> {
+        self.traits
     }
-
-    public fun flavour(self: &Item): String {
-        self.flavour
-    }
+    // public fun kind(self: &Item): String {
+    //     self.kind
+    // }
+    //
+    // public fun flavour(self: &Item): String {
+    //     self.flavour
+    // }
 
 
     public fun new_flavour(name: vector<u8>, weight: u64): Flavour<String> {
@@ -274,7 +281,6 @@ module contracts::item {
     struct ItemCreated has copy, drop {
         id: ID,
         url: Url,
-        kind: String,
-        flavour: String,
+        traits: vector<Trait<String, String>>,
     }
 }

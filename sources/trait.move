@@ -24,6 +24,14 @@ module contracts::trait {
         weight: Option<u64>,
     }
 
+    public fun name<TraitName: copy, FlavourName: copy>(self: &Trait<TraitName, FlavourName>): TraitName {
+        self.name
+    }
+
+    public fun flavour<TraitName: copy, FlavourName: copy>(self: &Trait<TraitName, FlavourName>): FlavourName {
+        self.flavour
+    }
+
     public fun new_trait<TraitName, FlavourName>(
         name: TraitName,
         flavour: FlavourName

@@ -12,8 +12,6 @@ module contracts::lemon {
     use std::vector;
     use std::option;
 
-    friend contracts::pool;
-
     // ------------------------ERRORS----------------------
     const EItemProhibbitedForAdding: u64 = 256;
 
@@ -188,7 +186,7 @@ module contracts::lemon {
         trait::new_flavour(string::utf8(name), option::some(weight))
     }
 
-    public(friend) fun from_blueprint(blueprint: Blueprint, ctx: &mut TxContext): Lemon {
+    public fun from_blueprint(blueprint: Blueprint, ctx: &mut TxContext): Lemon {
         Lemon {
             id: object::new(ctx),
             created: blueprint.created,
@@ -197,7 +195,7 @@ module contracts::lemon {
         }
     }
 
-    public(friend) fun into_blueprint(lemon: Lemon): Blueprint {
+    public fun into_blueprint(lemon: Lemon): Blueprint {
         let Lemon { id, created, url, traits } = lemon;
         object::delete(id);
 
@@ -208,7 +206,7 @@ module contracts::lemon {
         }
     }
 
-    public(friend) fun new_blueprint(
+    public fun new_blueprint(
         registry: &mut Registry<Lemons, String, Flavour<String>>,
         ctx: &mut TxContext
     ): Blueprint {

@@ -1,14 +1,15 @@
 module contracts::item {
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::url::{Self, Url};
-    use std::string::{String};
+    use std::string::{Self, String};
     use sui::tx_context::{Self, TxContext};
     use sui::transfer;
-    use contracts::lemon::new_flavour;
     use contracts::registry::{Self, Registry};
     use std::vector;
-    use contracts::trait::Flavour;
-    use std::string;
+    use contracts::trait::{Self, Flavour};
+    use sui::event::emit;
+    use contracts::random;
+    use std::option;
 
     // ====Types====
     struct Items {}
@@ -231,18 +232,28 @@ module contracts::item {
     }
 
     // ====Entries====
-    public entry fun create(kind: String, flavour: String, ctx: &mut TxContext) {
-        let item = new(kind, flavour, ctx);
+    public entry fun create_item(registry: &mut Registry<Items, String, Flavour<String>>, ctx: &mut TxContext) {
+        let item = new_item(registry, ctx);
+        emit(ItemCreated {
+            id: object::id(&item),
+            url: item.url,
+            kind: item.kind,
+            flavour: item.flavour,
+        });
         transfer::transfer(item, tx_context::sender(ctx));
     }
 
     // ====Helpers====
-    public fun new(kind: String, flavour: String, ctx: &mut TxContext): Item {
+    public fun new_item(registry: &mut Registry<Items, String, Flavour<String>>, ctx: &mut TxContext): Item {
+        let registry_size = registry::size(registry);
+        let idx = random::rng(0, registry_size, ctx);
+        let trait_opt = trait::generate_by_idx(registry, idx, ctx);
+        let trait = option::extract(&mut trait_opt);
         Item {
             id: object::new(ctx),
             url: url::new_unsafe_from_bytes(b"foo"),
-            kind,
-            flavour,
+            kind: trait::name(&trait),
+            flavour: trait::flavour(&trait),
         }
     }
 
@@ -252,5 +263,18 @@ module contracts::item {
 
     public fun flavour(self: &Item): String {
         self.flavour
+    }
+
+
+    public fun new_flavour(name: vector<u8>, weight: u64): Flavour<String> {
+        trait::new_flavour(string::utf8(name), option::some(weight))
+    }
+
+    // ====Events====
+    struct ItemCreated has copy, drop {
+        id: ID,
+        url: Url,
+        kind: String,
+        flavour: String,
     }
 }

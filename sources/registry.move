@@ -5,6 +5,7 @@ module contracts::registry {
     use sui::tx_context::TxContext;
     use std::hash;
     use sui::vec_map::{Self, VecMap};
+    use contracts::iter;
 
     // ==========Error=============
     const ERegistrySeedIsNone: u64 = 1001;
@@ -143,5 +144,21 @@ module contracts::registry {
         registry: &Registry<Kind, Key, Value>,
     ): u64 {
         registry.counter
+    }
+
+    public fun contains_value<Kind, Key: copy + drop, Value: copy + drop>(
+        registry: &Registry<Kind, Key, Value>,
+        value: Value,
+    ): bool {
+        let idx = 0;
+        while (idx < size(registry)) {
+            let (_, values) = vec_map::get_entry_by_idx(&registry.content, idx);
+            if (vector::contains(values, &value)) {
+                return true;
+            };
+            idx = idx + 1;
+        };
+
+        false
     }
 }

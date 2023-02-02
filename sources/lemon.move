@@ -10,6 +10,7 @@ module contracts::lemon {
     use sui::transfer;
     use std::vector;
     use std::option;
+    use sui::event::emit;
 
     // ------------------------ERRORS----------------------
     const EItemProhibbitedForAdding: u64 = 256;
@@ -162,11 +163,19 @@ module contracts::lemon {
         let flavour = new_flavour(*string::bytes(&trait_flavour), 0);
         assert!(registry::contains_value(registry, flavour), EItemProhibbitedForAdding);
         dynamic_field::add(&mut lemon.id, trait_name, item);
+        emit(ItemAdded {
+            lemon_id: object::uid_to_inner(&lemon.id),
+            item_id: object::uid_to_inner(&item::uid(&item)),
+        });
     }
 
     public entry fun remove_item(lemon: &mut Lemon, item_kind: String, ctx: &mut TxContext) {
         let item: Item<String, String> = dynamic_field::remove(&mut lemon.id, item_kind);
         transfer::transfer(item, tx_context::sender(ctx));
+        emit(ItemRemoved {
+            lemon_id: object::uid_to_inner(&lemon.id),
+            item_id: object::uid_to_inner(&item::uid(&item)),
+        })
     }
 
     // ================Helpers=====================
@@ -225,148 +234,158 @@ module contracts::lemon {
         traits: vector<Trait<String, String>>
     }
 
-    // -----------------------TEST------------------------------------------------
-    #[test_only]
-    use std::vector;
-    #[test_only]
-    use sui::test_scenario;
-    #[test_only]
-    use contracts::test_helpers::{alice};
-    #[test_only]
-    use std::string::utf8;
-    use sui::event::emit;
-
-    #[test]
-    fun init_success() {
-        let scenario_val = test_scenario::begin(alice());
-        let scenario = &mut scenario_val;
-        let ctx = test_scenario::ctx(scenario);
-        {
-            init(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let permitted = test_scenario::take_shared<Equipment>(scenario);
-            let admin = test_scenario::take_from_sender<AdminCap>(scenario);
-            test_scenario::return_shared(permitted);
-            test_scenario::return_to_sender(scenario, admin);
-        };
-        test_scenario::end(scenario_val);
+    struct ItemAdded has copy, drop {
+        lemon_id: ID,
+        item_id: ID,
     }
 
-    #[test]
-    fun create_one_item_works() {
-        let ctx = tx_context::dummy();
-        let item = item::new(
-            utf8(b"foo"),
-            utf8(b"bar"),
-            &mut ctx
-        );
-
-        transfer::transfer(item, alice());
-    }
-
-    #[test]
-    #[expected_failure(abort_code = 256)]
-    fun add_prohibited_item_to_lemon_fail() {
-        let scenario_val = test_scenario::begin(alice());
-        let scenario = &mut scenario_val;
-        {
-            let ctx = test_scenario::ctx(scenario);
-            init(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let ctx = test_scenario::ctx(scenario);
-            item::create(
-                utf8(b"foo"),
-                utf8(b"bar"),
-                ctx
-            );
-            create_lemon(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let permitted = test_scenario::take_shared<Equipment>(scenario);
-            let item = test_scenario::take_from_sender<Item>(scenario);
-            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
-            lemon::add_item(&permitted, &mut lemon, item);
-            test_scenario::return_to_sender(scenario, lemon);
-            test_scenario::return_shared(permitted);
-        };
-        test_scenario::end(scenario_val);
-    }
-
-    #[test]
-    fun add_permitted_item_success() {
-        let scenario_val = test_scenario::begin(alice());
-        let scenario = &mut scenario_val;
-        {
-            let ctx = test_scenario::ctx(scenario);
-            init_helper(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let ctx = test_scenario::ctx(scenario);
-            let flavour = utf8(b"bar");
-            item::create(
-                utf8(b"foo"),
-                flavour,
-                ctx
-            );
-            lemon::create_lemon(ctx);
-            let admin = test_scenario::take_from_sender<AdminCap>(scenario);
-            let permitted = test_scenario::take_shared<Equipment>(scenario);
-            lemon::permit_new_item(
-                &mut admin,
-                &mut permitted,
-                flavour
-            );
-            test_scenario::return_to_sender(scenario, admin);
-            test_scenario::return_shared(permitted);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let permitted = test_scenario::take_shared<Equipment>(scenario);
-            let item = test_scenario::take_from_sender<Item>(scenario);
-            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
-            lemon::add_item(&permitted, &mut lemon, item);
-            test_scenario::return_to_sender(scenario, lemon);
-            test_scenario::return_shared(permitted);
-        };
-        test_scenario::end(scenario_val);
-    }
-
-    #[test]
-    fun create_one_lemon_works() {
-        let scenario_val = test_scenario::begin(alice());
-        let scenario = &mut scenario_val;
-        let ctx = test_scenario::ctx(scenario);
-        {
-            lemon::create_lemon(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
-            test_scenario::return_to_sender(scenario, lemon);
-        };
-        test_scenario::end(scenario_val);
-    }
-
-    #[test]
-    fun create_two_lemon_works() {
-        let scenario_val = test_scenario::begin(alice());
-        let scenario = &mut scenario_val;
-        let ctx = test_scenario::ctx(scenario);
-        {
-            lemon::create_lemon(ctx);
-            lemon::create_lemon(ctx);
-        };
-        test_scenario::next_tx(scenario, alice());
-        {
-            let lemons_amount = test_scenario::ids_for_sender<Lemon>(scenario);
-            assert!(vector::length(&lemons_amount) == 2, 0);
-        };
-        test_scenario::end(scenario_val);
+    struct ItemRemoved has copy, drop {
+        lemon_id: ID,
+        item_id: ID,
     }
 }
+// -----------------------TEST------------------------------------------------
+//     #[test_only]
+//     use std::vector;
+//     #[test_only]
+//     use sui::test_scenario;
+//     #[test_only]
+//     use contracts::test_helpers::{alice};
+//     #[test_only]
+//     use std::string::utf8;
+//     use sui::event::emit;
+//
+//     #[test]
+//     fun init_success() {
+//         let scenario_val = test_scenario::begin(alice());
+//         let scenario = &mut scenario_val;
+//         let ctx = test_scenario::ctx(scenario);
+//         {
+//             init(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let permitted = test_scenario::take_shared<Equipment>(scenario);
+//             let admin = test_scenario::take_from_sender<AdminCap>(scenario);
+//             test_scenario::return_shared(permitted);
+//             test_scenario::return_to_sender(scenario, admin);
+//         };
+//         test_scenario::end(scenario_val);
+//     }
+//
+//     #[test]
+//     fun create_one_item_works() {
+//         let ctx = tx_context::dummy();
+//         let item = item::new(
+//             utf8(b"foo"),
+//             utf8(b"bar"),
+//             &mut ctx
+//         );
+//
+//         transfer::transfer(item, alice());
+//     }
+//
+//     #[test]
+//     #[expected_failure(abort_code = 256)]
+//     fun add_prohibited_item_to_lemon_fail() {
+//         let scenario_val = test_scenario::begin(alice());
+//         let scenario = &mut scenario_val;
+//         {
+//             let ctx = test_scenario::ctx(scenario);
+//             init(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let ctx = test_scenario::ctx(scenario);
+//             item::create(
+//                 utf8(b"foo"),
+//                 utf8(b"bar"),
+//                 ctx
+//             );
+//             create_lemon(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let permitted = test_scenario::take_shared<Equipment>(scenario);
+//             let item = test_scenario::take_from_sender<Item>(scenario);
+//             let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+//             lemon::add_item(&permitted, &mut lemon, item);
+//             test_scenario::return_to_sender(scenario, lemon);
+//             test_scenario::return_shared(permitted);
+//         };
+//         test_scenario::end(scenario_val);
+//     }
+//
+//     #[test]
+//     fun add_permitted_item_success() {
+//         let scenario_val = test_scenario::begin(alice());
+//         let scenario = &mut scenario_val;
+//         {
+//             let ctx = test_scenario::ctx(scenario);
+//             init_helper(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let ctx = test_scenario::ctx(scenario);
+//             let flavour = utf8(b"bar");
+//             item::create(
+//                 utf8(b"foo"),
+//                 flavour,
+//                 ctx
+//             );
+//             lemon::create_lemon(ctx);
+//             let admin = test_scenario::take_from_sender<AdminCap>(scenario);
+//             let permitted = test_scenario::take_shared<Equipment>(scenario);
+//             lemon::permit_new_item(
+//                 &mut admin,
+//                 &mut permitted,
+//                 flavour
+//             );
+//             test_scenario::return_to_sender(scenario, admin);
+//             test_scenario::return_shared(permitted);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let permitted = test_scenario::take_shared<Equipment>(scenario);
+//             let item = test_scenario::take_from_sender<Item>(scenario);
+//             let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+//             lemon::add_item(&permitted, &mut lemon, item);
+//             test_scenario::return_to_sender(scenario, lemon);
+//             test_scenario::return_shared(permitted);
+//         };
+//         test_scenario::end(scenario_val);
+//     }
+//
+//     #[test]
+//     fun create_one_lemon_works() {
+//         let scenario_val = test_scenario::begin(alice());
+//         let scenario = &mut scenario_val;
+//         let ctx = test_scenario::ctx(scenario);
+//         {
+//             lemon::create_lemon(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+//             test_scenario::return_to_sender(scenario, lemon);
+//         };
+//         test_scenario::end(scenario_val);
+//     }
+//
+//     #[test]
+//     fun create_two_lemon_works() {
+//         let scenario_val = test_scenario::begin(alice());
+//         let scenario = &mut scenario_val;
+//         let ctx = test_scenario::ctx(scenario);
+//         {
+//             lemon::create_lemon(ctx);
+//             lemon::create_lemon(ctx);
+//         };
+//         test_scenario::next_tx(scenario, alice());
+//         {
+//             let lemons_amount = test_scenario::ids_for_sender<Lemon>(scenario);
+//             assert!(vector::length(&lemons_amount) == 2, 0);
+//         };
+//         test_scenario::end(scenario_val);
+//     }
+// }

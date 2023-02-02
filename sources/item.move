@@ -259,8 +259,8 @@ module contracts::item {
         }
     }
 
-    public fun uid<TraitName: copy, TraitFlavour: copy>(self: &Item<TraitName, TraitFlavour>): UID {
-        self.id
+    public fun uid<TraitName: copy, TraitFlavour: copy>(self: &Item<TraitName, TraitFlavour>): &UID {
+        &self.id
     }
 
     public fun traits<TraitName: copy, TraitFlavour: copy>(

@@ -49,57 +49,129 @@ module contracts::lemon {
     }
 
     fun populate_registry(registry: &mut Registry<Lemons, String, Flavour<String>>) {
-        // exo
-        let exo_flavours = &mut vector::empty<Flavour<String>>();
+        // exo_top
+        let exo_top_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
-            exo_flavours,
-            new_flavour(b"Exo_Snowwhite_Exoskeleton_AA02", 85)
+            exo_top_flavours,
+            new_flavour(b"ExoTop_Snowwhite", 64)
         );
         vector::push_back(
-            exo_flavours,
-            new_flavour(b"Exo_Steel_Exoskeleton_AA01", 170)
+            exo_top_flavours,
+            new_flavour(b"ExoTop_Steel", 128)
         );
         vector::push_back(
-            exo_flavours,
+            exo_top_flavours,
+            new_flavour(b"ExoTop_Khaki", 192)
+        );
+        vector::push_back(
+            exo_top_flavours,
+            new_flavour(b"ExoTop_Golden", 255)
+        );
+        let group_name = string::utf8(b"exo_top");
+        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *exo_top_flavours);
+
+        // exo_bot
+        let exo_bot_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            exo_bot_flavours,
+            new_flavour(b"ExoBot_Snowwhite", 64)
+        );
+        vector::push_back(
+            exo_bot_flavours,
+            new_flavour(b"ExoBot_Khaki", 128)
+        );
+        vector::push_back(
+            exo_bot_flavours,
+            new_flavour(b"ExoBot_Golden", 192)
+        );
+        vector::push_back(
+            exo_bot_flavours,
             new_flavour(b"Exo_Military_Exoskeleton_MA01", 255)
         );
-        let group_name = string::utf8(b"exo");
-        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *exo_flavours);
+        let group_name = string::utf8(b"exo_bot");
+        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *exo_bot_flavours);
+
+        // feet
+        let feet_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            feet_flavours,
+            new_flavour(b"Feet_Snowwhite", 64)
+        );
+        vector::push_back(
+            feet_flavours,
+            new_flavour(b"Feet_Steel", 128)
+        );
+        vector::push_back(
+            feet_flavours,
+            new_flavour(b"Feet_Khaki", 192)
+        );
+        vector::push_back(
+            feet_flavours,
+            new_flavour(b"Feet_Golden", 255)
+        );
+        let group_name = string::utf8(b"feet");
+        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *feet_flavours);
 
         // eyes
         let eyes_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             eyes_flavours,
-            new_flavour(b"Eyes_Blue_AA01", 85)
+            new_flavour(b"Eyes_Blue", 64)
         );
         vector::push_back(
             eyes_flavours,
-            new_flavour(b"Eyes_Green_AA02", 170)
+            new_flavour(b"Eyes_Green", 128)
         );
         vector::push_back(
             eyes_flavours,
-            new_flavour(b"Eyes_Zombie_ZA01", 255)
+            new_flavour(b"Eyes_Alien", 192)
+        );
+        vector::push_back(
+            eyes_flavours,
+            new_flavour(b"Eyes_Zombie", 255)
         );
         let group_name = string::utf8(b"eyes");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *eyes_flavours);
+
+
+        // hands
+        let hands_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            hands_flavours,
+            new_flavour(b"Hands_Snowwhite", 64)
+        );
+        vector::push_back(
+            hands_flavours,
+            new_flavour(b"Hands_Steel", 128)
+        );
+        vector::push_back(
+            hands_flavours,
+            new_flavour(b"Hands_Khaki", 192)
+        );
+        vector::push_back(
+            hands_flavours,
+            new_flavour(b"Hands_Golden", 255)
+        );
+        let group_name = string::utf8(b"hands");
+        registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *hands_flavours);
 
         // head
         let head_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             head_flavours,
-            new_flavour(b"Head_Fresh_Lemon_AA01", 64)
+            new_flavour(b"Head_Fresh_Lemon", 64)
         );
         vector::push_back(
             head_flavours,
-            new_flavour(b"Head_Zombie_ZA01", 128)
+            new_flavour(b"Head_Zombie", 128)
         );
         vector::push_back(
             head_flavours,
-            new_flavour(b"Head_Clementine_AA02", 192)
+            new_flavour(b"Head_Clementine", 192)
         );
         vector::push_back(
             head_flavours,
-            new_flavour(b"Head_Lime_AA03", 255)
+            new_flavour(b"Head_Lime", 255)
         );
         let group_name = string::utf8(b"head");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *head_flavours);
@@ -108,23 +180,23 @@ module contracts::lemon {
         let teeth_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Grga_AA02", 51)
+            new_flavour(b"Teeth_Grga", 51)
         );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Hollywood_AA01", 102)
+            new_flavour(b"Teeth_Hollywood", 102)
         );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Oldstyle_AA04", 153)
+            new_flavour(b"Teeth_Oldstyle", 153)
         );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Sharp_AA03", 204)
+            new_flavour(b"Teeth_Sharp", 204)
         );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Grillz_Silver_RA01", 255)
+            new_flavour(b"Teeth_Grillz_Diamond", 255)
         );
         let group_name = string::utf8(b"teeth");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *teeth_flavours);
@@ -162,19 +234,21 @@ module contracts::lemon {
         let trait_flavour = trait::flavour(&trait);
         let flavour = new_flavour(*string::bytes(&trait_flavour), 0);
         assert!(registry::contains_value(registry, flavour), EItemProhibbitedForAdding);
+        let item_id = object::uid_to_inner(item::uid(&item));
         dynamic_field::add(&mut lemon.id, trait_name, item);
         emit(ItemAdded {
             lemon_id: object::uid_to_inner(&lemon.id),
-            item_id: object::uid_to_inner(&item::uid(&item)),
+            item_id,
         });
     }
 
     public entry fun remove_item(lemon: &mut Lemon, item_kind: String, ctx: &mut TxContext) {
         let item: Item<String, String> = dynamic_field::remove(&mut lemon.id, item_kind);
+        let item_id = object::uid_to_inner(item::uid(&item));
         transfer::transfer(item, tx_context::sender(ctx));
         emit(ItemRemoved {
             lemon_id: object::uid_to_inner(&lemon.id),
-            item_id: object::uid_to_inner(&item::uid(&item)),
+            item_id,
         })
     }
 

@@ -32,86 +32,88 @@ module contracts::item {
         let back_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             back_flavours,
-            new_flavour(b"Back_Insecticide_Bottle_ZA01", 64)
+            new_flavour(b"Back_Insecticide_Bottle", 64)
         );
         vector::push_back(
             back_flavours,
-            new_flavour(b"Back_Bomb_Barrel_PA02", 128)
+            new_flavour(b"Back_Bomb_Barrel", 128)
         );
         vector::push_back(
             back_flavours,
-            new_flavour(b"Back_Tactical_Backpack_MA01", 192)
+            new_flavour(b"Back_Tactical_Backpack", 192)
         );
         vector::push_back(
             back_flavours,
-            new_flavour(b"Back_Adventurer_Backpack_PA01", 255)
+            new_flavour(b"Back_Adventurer_Backpack", 255)
         );
         let group_name = string::utf8(b"back");
         registry::append<Items, String, Flavour<String>>(registry, &group_name, *back_flavours);
+
         // cap
         let cap_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Baseball_Cap_Red_RA01", 17)
+            new_flavour(b"Cap_Baseball_Cap_Red", 17)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Ladle_ZA01", 34)
+            new_flavour(b"Cap_Ladle", 34)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Cheef_Hat_KA01", 51)
+            new_flavour(b"Cap_Cheef_Hat", 51)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Cone_Armored_Hat_NA03", 68)
+            new_flavour(b"Cap_Cone_Armored_Hat", 68)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Cowboy_Hat_CA01", 85)
+            new_flavour(b"Cap_Cowboy_Hat", 85)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Sheriff_Hat_CA02", 102)
+            new_flavour(b"Cap_Sheriff_Hat", 102)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Military_Cap_MA05", 119)
+            new_flavour(b"Cap_Military_Cap", 119)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Special_Forces_Beret_MA02", 136)
+            new_flavour(b"Cap_Special_Forces_Beret", 136)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Tank_Helmet_MA03", 153)
+            new_flavour(b"Cap_Tank_Helmet", 153)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Military_Helmet_MA04", 170)
+            new_flavour(b"Cap_Military_Helmet", 170)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Metallic_Cone_Hat_NA04", 187)
+            new_flavour(b"Cap_Metallic_Cone_Hat", 187)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Assault_Helmet_MA01", 204)
+            new_flavour(b"Cap_Assault_Helmet", 204)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Cane_Cone_Hat_NA02", 221)
+            new_flavour(b"Cap_Cane_Cone_Hat", 221)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Cocked_Hat_PA01", 238)
+            new_flavour(b"Cap_Cocked_Hat", 238)
         );
         vector::push_back(
             cap_flavours,
-            new_flavour(b"Cap_Pirate_Bandana_PA02", 255)
+            new_flavour(b"Cap_Pirate_Bandana", 255)
         );
         let group_name = string::utf8(b"cap");
         registry::append<Items, String, Flavour<String>>(registry, &group_name, *cap_flavours);
+
         // cloth
         let cloth_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -144,6 +146,36 @@ module contracts::item {
         );
         let group_name = string::utf8(b"cloth");
         registry::append<Items, String, Flavour<String>>(registry, &group_name, *cloth_flavours);
+
+        //belt
+        let belt_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Chain_Gold_RA01", 42)
+        );
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Cheef_Sash_KA01", 84)
+        );
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Eastern_Armor_Belt_NA02", 126)
+        );
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Ninja_Waistband_NA01", 168)
+        );
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Poncho_CA01", 210)
+        );
+        vector::push_back(
+            belt_flavours,
+            new_flavour(b"Cloth_Bandolier_MA02", 255)
+        );
+        let group_name = string::utf8(b"belt");
+        registry::append<Items, String, Flavour<String>>(registry, &group_name, *belt_flavours);
+
         // cold_arms
         let cold_arms_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(

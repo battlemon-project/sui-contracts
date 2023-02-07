@@ -21,13 +21,7 @@ module contracts::item {
     }
 
     // ====Init====
-    fun init(ctx: &mut TxContext) {
-        let registry = registry::create<Items, String, Flavour<String>>(ctx);
-        populate_registry(&mut registry);
-        transfer::share_object(registry);
-    }
-
-    fun populate_registry(registry: &mut Registry<Items, String, Flavour<String>>) {
+    public fun populate_registry(registry: &mut Registry<Items, String, Flavour<String>>) {
         // back
         let back_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(

@@ -90,7 +90,7 @@ module contracts::lemon {
         );
         vector::push_back(
             exo_bot_flavours,
-            new_flavour(b"Exo_Military_Exoskeleton", 255)
+            new_flavour(b"ExoBot_Steel", 255)
         );
         let group_name = string::utf8(b"exo_bot");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *exo_bot_flavours);

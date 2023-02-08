@@ -65,7 +65,7 @@ module contracts::lemon {
         );
         vector::push_back(
             exo_top_flavours,
-            new_flavour(b"ExoTop_Khaki", 192)
+            new_flavour(b"ExoTop_Hacky", 192)
         );
         vector::push_back(
             exo_top_flavours,
@@ -82,7 +82,7 @@ module contracts::lemon {
         );
         vector::push_back(
             exo_bot_flavours,
-            new_flavour(b"ExoBot_Khaki", 128)
+            new_flavour(b"ExoBot_Hacky", 128)
         );
         vector::push_back(
             exo_bot_flavours,
@@ -107,7 +107,7 @@ module contracts::lemon {
         );
         vector::push_back(
             feet_flavours,
-            new_flavour(b"Feet_Khaki", 192)
+            new_flavour(b"Feet_Military", 192)
         );
         vector::push_back(
             feet_flavours,
@@ -150,7 +150,7 @@ module contracts::lemon {
         );
         vector::push_back(
             hands_flavours,
-            new_flavour(b"Hands_Khaki", 192)
+            new_flavour(b"Hands_Yellow_Plastic", 192)
         );
         vector::push_back(
             hands_flavours,

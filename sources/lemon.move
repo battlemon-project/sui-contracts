@@ -200,7 +200,7 @@ module contracts::lemon {
         );
         vector::push_back(
             teeth_flavours,
-            new_flavour(b"Teeth_Grillz_Diamond", 255)
+            new_flavour(b"Teeth_Grillz_Silver", 255)
         );
         let group_name = string::utf8(b"teeth");
         registry::append<Lemons, String, Flavour<String>>(registry, &group_name, *teeth_flavours);

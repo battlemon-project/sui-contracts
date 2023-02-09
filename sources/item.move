@@ -171,11 +171,11 @@ module contracts::item {
         let face_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
             face_flavours,
-            new_flavour(b"Face_Sunglasses", 127)
+            new_flavour(b"Glasses_Sunglasses", 127)
         );
         vector::push_back(
             face_flavours,
-            new_flavour(b"Face_Visor_VR", 255)
+            new_flavour(b"Glasses_Visor_VR", 255)
         );
         let group_name = string::utf8(b"glasses");
         registry::append<Items, String, Flavour<String>>(registry, &group_name, *face_flavours);

@@ -252,11 +252,13 @@ module contracts::item {
         let idx = random::rng(0, registry_size, ctx);
         let trait_opt = trait::generate_by_idx(registry, idx, ctx);
         let trait = option::extract(&mut trait_opt);
+        let url = trait::create_url_to_media(&trait);
+        let url = url::new_unsafe(string::to_ascii(url));
         let traits = vector::empty();
         vector::push_back(&mut traits, trait);
         Item {
             id: object::new(ctx),
-            url: url::new_unsafe_from_bytes(b"foo"),
+            url,
             traits,
         }
     }

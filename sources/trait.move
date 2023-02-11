@@ -6,6 +6,8 @@ module contracts::trait {
     use contracts::iter;
     use std::hash;
     use contracts::trait;
+    use std::string::{String, utf8};
+    use std::string;
 
     /// ===========Constants============
     const MutationChance: u8 = 5;
@@ -198,5 +200,13 @@ module contracts::trait {
     fun derive(seed: &vector<u8>, path: u8): vector<u8> {
         vector::push_back(&mut *seed, path);
         hash::sha3_256(*seed)
+    }
+
+    fun create_url_to_media(self: &Trait<String, String>): String {
+        let ret = utf8(b"https://battlemon.com/assets/128/Icon_");
+        let suffix = utf8(b"_128.png");
+        string::append(&mut ret, self.name);
+        string::append(&mut ret, suffix);
+        ret
     }
 }

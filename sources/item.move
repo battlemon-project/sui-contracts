@@ -189,34 +189,34 @@ module contracts::item {
         let group_name = string::utf8(b"mask");
         registry::append<Items, String, Flavour<String>>(registry, &group_name, *mask_flavours);
 
-        // fire_arm
-        let fire_arm_flavours = &mut vector::empty<Flavour<String>>();
+        // fire_arms
+        let fire_arms_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Sniper_Rifle", 43)
         );
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Revolver", 86)
         );
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Grenade_Launcher", 129)
         );
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Handgun_SMG", 172)
         );
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Assault_Rifle_A", 215)
         );
         vector::push_back(
-            fire_arm_flavours,
+            fire_arms_flavours,
             new_flavour(b"FireArms_Assault_Rifle_M", 255)
         );
-        let group_name = string::utf8(b"fire_arm");
-        registry::append<Items, String, Flavour<String>>(registry, &group_name, *fire_arm_flavours);
+        let group_name = string::utf8(b"fire_arms");
+        registry::append<Items, String, Flavour<String>>(registry, &group_name, *fire_arms_flavours);
 
         // shoes
         let shoes_flavours = &mut vector::empty<Flavour<String>>();

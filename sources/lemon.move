@@ -292,10 +292,9 @@ module contracts::lemon {
         ctx: &mut TxContext
     ): Blueprint {
         registry::increment_counter(registry);
-
         Blueprint {
             created: registry::counter(registry),
-            url: url::new_unsafe_from_bytes(b"https://promo.battlemon.com/assets/default-lemon.png"),
+            url: url::new_unsafe_from_bytes(b"https://battlemon.com/assets/default-lemon.png"),
             traits: trait::generate_all<Lemons, String, String>(registry, ctx)
         }
     }

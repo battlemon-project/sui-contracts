@@ -202,7 +202,7 @@ module contracts::trait {
         hash::sha3_256(*seed)
     }
 
-    fun create_url_to_media(self: &Trait<String, String>): String {
+    public fun create_url_to_media(self: &Trait<String, String>): String {
         let ret = utf8(b"https://battlemon.com/assets/128/Icon_");
         let suffix = utf8(b"_128.png");
         string::append(&mut ret, self.name);

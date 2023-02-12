@@ -205,7 +205,7 @@ module contracts::trait {
     public fun create_url_to_media(self: &Trait<String, String>): String {
         let ret = utf8(b"https://battlemon.com/assets/128/Icon_");
         let suffix = utf8(b"_128.png");
-        string::append(&mut ret, self.name);
+        string::append(&mut ret, self.flavour);
         string::append(&mut ret, suffix);
         ret
     }

@@ -263,6 +263,17 @@ module contracts::item {
         }
     }
 
+    public fun from_traits<TraitName, TraitFlavour>(
+        traits: vector<Trait<TraitName, TraitFlavour>>,
+        ctx: &mut TxContext,
+    ): Item<TraitName, TraitFlavour> {
+        Item {
+            id: object::new(ctx),
+            url: url::new_unsafe_from_bytes(b"http://foo.bar"),
+            traits
+        }
+    }
+
     public fun uid<TraitName: copy, TraitFlavour: copy>(self: &Item<TraitName, TraitFlavour>): &UID {
         &self.id
     }

@@ -259,6 +259,10 @@ module contracts::lemon {
     }
 
     // ================Helpers=====================
+    public fun uid<TraitName: copy, TraitFlavour: copy>(self: &Lemon): &UID {
+        &self.id
+    }
+
     public(friend) fun new_lemon(
         registry: &mut Registry<Lemons, String, Flavour<String>>,
         ctx: &mut TxContext,
@@ -355,9 +359,66 @@ module contracts::lemon {
             let lemon = test_scenario::take_from_sender<Lemon>(scenario);
             let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
             let item_registry = test_scenario::take_shared<Registry<Items, String, Flavour<String>>>(scenario);
-            add_item(&mut lemon, item);
+            let ctx = test_scenario::ctx(scenario);
+            add_item(&mut lemon, item, ctx);
             test_scenario::return_to_sender(scenario, lemon);
             test_scenario::return_shared(item_registry);
+        };
+        test_scenario::end(scenario_val);
+    }
+
+    #[test]
+    fun replace_item_success() {
+        let scenario_val = test_scenario::begin(alice());
+        let scenario = &mut scenario_val;
+        {
+            let ctx = test_scenario::ctx(scenario);
+            init(ctx);
+        };
+        test_scenario::next_tx(scenario, alice());
+        {
+            let lemon_registry = test_scenario::take_shared<Registry<Lemons, String, Flavour<String>>>(scenario);
+            let item_registry = test_scenario::take_shared<Registry<Items, String, Flavour<String>>>(scenario);
+            let ctx = test_scenario::ctx(scenario);
+            create_lemon(&mut lemon_registry, ctx);
+            create_item(&mut item_registry, ctx);
+            test_scenario::return_shared(lemon_registry);
+            test_scenario::return_shared(item_registry);
+        };
+        test_scenario::next_tx(scenario, alice());
+        let item_id;
+        let copycat_item_id;
+        let trait_name;
+        {
+            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+            let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
+
+            let traits = item::traits(&item);
+            let trait = vector::pop_back(&mut traits);
+            trait_name = trait::name(&trait);
+
+            let item_registry = test_scenario::take_shared<Registry<Items, String, Flavour<String>>>(scenario);
+            let ctx = test_scenario::ctx(scenario);
+            let copycat_opt = trait::generate_by_name(&mut item_registry, &trait_name, ctx);
+            let copycat_trait = option::extract(&mut copycat_opt);
+            let traits = vector::singleton(copycat_trait);
+            let copycat_item = item::from_traits(traits, ctx);
+
+            item_id = item::uid(&item);
+            copycat_item_id = item::uid(&copycat_item);
+
+            add_item(&mut lemon, item, ctx);
+            add_item(&mut lemon, copycat_item, ctx);
+
+
+            test_scenario::return_to_sender(scenario, lemon);
+            test_scenario::return_shared(item_registry);
+        };
+        test_scenario::next_tx(scenario, alice());
+        {
+            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+            let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
+            dynamic_field::borrow(, trait_name);
         };
         test_scenario::end(scenario_val);
     }

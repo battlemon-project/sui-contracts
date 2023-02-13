@@ -229,12 +229,18 @@ module contracts::lemon {
 
     public entry fun add_item(
         lemon: &mut Lemon,
-        item: Item<String, String>
+        item: Item<String, String>,
+        ctx: &mut TxContext,
     ) {
         let traits = item::traits(&item);
         let trait = vector::pop_back(&mut traits);
         let trait_name = trait::name(&trait);
         let item_id = object::uid_to_inner(item::uid(&item));
+
+        if (dynamic_field::exists_(&mut lemon.id, trait_name)) {
+            remove_item(lemon, trait_name, ctx);
+        };
+
         dynamic_field::add(&mut lemon.id, trait_name, item);
         emit(ItemAdded {
             lemon_id: object::uid_to_inner(&lemon.id),

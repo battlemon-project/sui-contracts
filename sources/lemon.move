@@ -259,7 +259,7 @@ module contracts::lemon {
     }
 
     // ================Helpers=====================
-    public fun uid<TraitName: copy, TraitFlavour: copy>(self: &Lemon): &UID {
+    public fun uid(self: &Lemon): &UID {
         &self.id
     }
 
@@ -334,6 +334,8 @@ module contracts::lemon {
     use contracts::test_helpers::{alice};
     #[test_only]
     use contracts::item::create_item;
+    #[test_only]
+    use sui::test_utils::{assert_eq};
 
 
     #[test]
@@ -386,30 +388,35 @@ module contracts::lemon {
             test_scenario::return_shared(item_registry);
         };
         test_scenario::next_tx(scenario, alice());
-        let item_id;
-        let copycat_item_id;
+
         let trait_name;
         {
-            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
             let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
-
             let traits = item::traits(&item);
             let trait = vector::pop_back(&mut traits);
             trait_name = trait::name(&trait);
-
             let item_registry = test_scenario::take_shared<Registry<Items, String, Flavour<String>>>(scenario);
             let ctx = test_scenario::ctx(scenario);
             let copycat_opt = trait::generate_by_name(&mut item_registry, &trait_name, ctx);
             let copycat_trait = option::extract(&mut copycat_opt);
-            let traits = vector::singleton(copycat_trait);
-            let copycat_item = item::from_traits(traits, ctx);
+            let copycat_traits = vector::singleton(copycat_trait);
+            let copycat_item = item::from_traits(copycat_traits, ctx);
 
-            item_id = item::uid(&item);
-            copycat_item_id = item::uid(&copycat_item);
-
+            transfer::transfer(copycat_item, alice());
+            test_scenario::return_to_sender(scenario, item);
+            test_scenario::return_shared(item_registry);
+        };
+        test_scenario::next_tx(scenario, alice());
+        let copycat_item_id;
+        {
+            let lemon = test_scenario::take_from_sender<Lemon>(scenario);
+            let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
+            let copycat_item = test_scenario::take_from_sender(scenario);
+            copycat_item_id = object::id(&copycat_item);
+            let item_registry = test_scenario::take_shared<Registry<Items, String, Flavour<String>>>(scenario);
+            let ctx = test_scenario::ctx(scenario);
             add_item(&mut lemon, item, ctx);
             add_item(&mut lemon, copycat_item, ctx);
-
 
             test_scenario::return_to_sender(scenario, lemon);
             test_scenario::return_shared(item_registry);
@@ -418,7 +425,16 @@ module contracts::lemon {
         {
             let lemon = test_scenario::take_from_sender<Lemon>(scenario);
             let item = test_scenario::take_from_sender<Item<String, String>>(scenario);
-            dynamic_field::borrow(, trait_name);
+            let added_item
+                = dynamic_field::borrow<String, Item<String, String>>(uid(&lemon), trait_name);
+            if (&item == added_item) {
+                abort 1
+            };
+            let added_item_id = object::id(added_item);
+            assert_eq(copycat_item_id, added_item_id);
+
+            test_scenario::return_to_sender(scenario, lemon);
+            test_scenario::return_to_sender(scenario, item);
         };
         test_scenario::end(scenario_val);
     }

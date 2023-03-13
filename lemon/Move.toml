@@ -1,10 +1,13 @@
 [package]
-name = "contracts"
+name = "Lemon"
 version = "0.0.1"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
+Monolith = { local = "../monolith" }
+
+[dev-dependencies]
+TestHelpers = { local = "../test_helpers" }
 
 [addresses]
-contracts = "0x0"
-sui = "0x2"
+lemon = "0x0"

@@ -7,4 +7,4 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 
 [addresses]
 #monolith = "0x0"
-monolith = "0x9c5f9c711882df848d84bbb58dcd4edbd0129406"
+monolith = "0x870aef9a68b83c5885de1fc32352aed527e81574"

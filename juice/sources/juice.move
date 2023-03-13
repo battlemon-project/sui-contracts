@@ -23,6 +23,7 @@ module juice::juice {
 
     //--------------ERRORS
     const ECurrentEpochLessThanUnlockEpoch: u64 = 0;
+    const ENoMoreEmissions: u64 = 0;
 
     struct JuiceTreasury has key {
         id: UID,
@@ -61,16 +62,8 @@ module juice::juice {
         transfer::transfer(treasury_cap, tx_context::sender(ctx))
     }
 
-    public fun take(
-        _: &AdminCap<LJC>,
-        treasury: &mut JuiceTreasury,
-        amount: u64,
-        ctx: &mut TxContext
-    ): Coin<LJC> {
-        coin::take(&mut treasury.unlocked, amount, ctx)
-    }
-
     public entry fun unlock(treasury: &mut JuiceTreasury, ctx: &mut TxContext) {
+        assert!(!vector::is_empty(&treasury.emmisions), ENoMoreEmissions);
         let current_epoch = tx_context::epoch(ctx);
         assert!(treasury.next_epoch_unlock <= current_epoch, ECurrentEpochLessThanUnlockEpoch);
 
@@ -79,6 +72,15 @@ module juice::juice {
         balance::join(&mut treasury.unlocked, unlocked);
 
         treasury.next_epoch_unlock = treasury.next_epoch_unlock + UnlockPeriod;
+    }
+
+    public fun take(
+        _: &AdminCap<LJC>,
+        treasury: &mut JuiceTreasury,
+        amount: u64,
+        ctx: &mut TxContext
+    ): Coin<LJC> {
+        coin::take(&mut treasury.unlocked, amount, ctx)
     }
 
     fun setup_emmisions(): vector<u64> {

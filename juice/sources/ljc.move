@@ -1,4 +1,4 @@
-module juice::juice {
+module juice::ljc {
     use sui::tx_context::{TxContext};
     use sui::coin::{Self, Coin};
     use std::option;
@@ -12,6 +12,8 @@ module juice::juice {
     use monolith::admin::AdminCap;
 
     struct LJC has drop {}
+
+    struct JUICE has drop {}
 
     const JuiceMaxSupply: u64 = 46000000;
     const JuiceDecimals: u8 = 0;
@@ -33,9 +35,9 @@ module juice::juice {
         next_epoch_unlock: u64,
     }
 
-    fun init(ctx: &mut TxContext) {
+    fun init(witness: LJC, ctx: &mut TxContext) {
         let (treasury_cap, metadata) = coin::create_currency(
-            LJC {},
+            witness,
             JuiceDecimals,
             JuiceSymbol,
             JuiceName,
@@ -44,7 +46,7 @@ module juice::juice {
             ctx
         );
 
-        let admin_cap = admin::new(LJC {}, ctx);
+        let admin_cap = admin::new(JUICE {}, ctx);
         transfer::transfer(admin_cap, tx_context::sender(ctx));
 
         let max_supply = coin::mint_balance(&mut treasury_cap, JuiceMaxSupply);

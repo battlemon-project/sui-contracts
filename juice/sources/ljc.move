@@ -16,11 +16,11 @@ module juice::ljc {
     struct JUICE has drop {}
 
     const JuiceMaxSupply: u64 = 46000000;
-    const JuiceDecimals: u8 = 0;
+    const JuiceDecimals: u8 = 9;
     const JuiceSymbol: vector<u8> = b"LJC";
     const JuiceName: vector<u8> = b"Lemon Juice";
     const JuiceDescription: vector<u8> = b"Some description";
-    const JuiceIconUrl: vector<u8> = b"https://foo.bar";
+    const JuiceIconUrl: vector<u8> = b"https://demo.battlemon.com/favicon.png";
     const UnlockPeriod: u64 = 365;
 
     //--------------ERRORS

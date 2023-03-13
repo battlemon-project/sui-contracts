@@ -1,0 +1,11 @@
+[package]
+name = "Victim"
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
+Dependency = { local = "../dependency" }
+
+[addresses]
+#victim = "0x0"
+victim = "0xb17a72714a7c69c14bde3d77cd3e1eb68cd6d3f2"

@@ -68,6 +68,11 @@ module reward_pool::reward_pool {
         transfer::transfer(juice_reward, player_address);
     }
 
+    public entry fun withdraw(_: AdminCap<LJC>, self: &mut RewardPool, amount: u64, ctx: &mut TxContext) {
+        let juice = coin::take(&mut self.reward_pool, amount, ctx);
+        transfer::transfer(juice, tx_context::sender(ctx));
+    }
+
     fun get_amount_of_reward(self: &mut RewardPool, ctx: &mut TxContext): u64 {
         let address = tx_context::sender(ctx);
         *vec_map::get(&self.expected_rewards, &address)

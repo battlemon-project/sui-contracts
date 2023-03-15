@@ -64,25 +64,25 @@ module juice::ljc {
         transfer::transfer(treasury_cap, tx_context::sender(ctx))
     }
 
-    public entry fun unlock(treasury: &mut JuiceTreasury, ctx: &mut TxContext) {
-        assert!(!vector::is_empty(&treasury.emmisions), ENoMoreEmissions);
+    public entry fun unlock(self: &mut JuiceTreasury, ctx: &mut TxContext) {
+        assert!(!vector::is_empty(&self.emmisions), ENoMoreEmissions);
         let current_epoch = tx_context::epoch(ctx);
-        assert!(treasury.next_epoch_unlock <= current_epoch, ECurrentEpochLessThanUnlockEpoch);
+        assert!(self.next_epoch_unlock <= current_epoch, ECurrentEpochLessThanUnlockEpoch);
 
-        let emission = vector::pop_back(&mut treasury.emmisions);
-        let unlocked = balance::split(&mut treasury.locked, emission);
-        balance::join(&mut treasury.unlocked, unlocked);
+        let emission = vector::pop_back(&mut self.emmisions);
+        let unlocked = balance::split(&mut self.locked, emission);
+        balance::join(&mut self.unlocked, unlocked);
 
-        treasury.next_epoch_unlock = treasury.next_epoch_unlock + UnlockPeriod;
+        self.next_epoch_unlock = self.next_epoch_unlock + UnlockPeriod;
     }
 
     public fun take(
         _: &AdminCap<LJC>,
-        treasury: &mut JuiceTreasury,
+        self: &mut JuiceTreasury,
         amount: u64,
         ctx: &mut TxContext
     ): Coin<LJC> {
-        coin::take(&mut treasury.unlocked, amount, ctx)
+        coin::take(&mut self.unlocked, amount, ctx)
     }
 
     fun setup_emmisions(): vector<u64> {

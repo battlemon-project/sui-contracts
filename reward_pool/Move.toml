@@ -1,11 +1,10 @@
 [package]
-name = "Attacker"
+name = "reward_pool"
 version = "0.0.1"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
-Dependency = { local = "../dependency" }
-Victim = { local = "../victim" }
 
 [addresses]
-attacker = "0x0"
+reward_pool =  "0x0"
+sui =  "0000000000000000000000000000000000000002"

@@ -27,11 +27,11 @@ module monolith::registry {
 
     public fun add_or_insert<Witness: drop, Key: copy + drop, Value: copy + drop>(
         _admin: &AdminCap<Witness>,
-        registry: &mut Registry<Witness, Key, Value>,
+        self: &mut Registry<Witness, Key, Value>,
         key: &Key,
         value: Value,
     ) {
-        let content = &mut registry.content;
+        let content = &mut self.content;
         let idx_opt = vec_map::get_idx_opt<Key, vector<Value>>(content, key);
         if (option::is_none(&idx_opt)) {
             let values = vector::singleton(value);
@@ -45,11 +45,11 @@ module monolith::registry {
 
     public fun append<Witness: drop, Key: copy + drop, Value: copy + drop>(
         _admin: &AdminCap<Witness>,
-        registry: &mut Registry<Witness, Key, Value>,
+        self: &mut Registry<Witness, Key, Value>,
         key: &Key,
         values: vector<Value>,
     ) {
-        let content = &mut registry.content;
+        let content = &mut self.content;
         let idx_opt = vec_map::get_idx_opt<Key, vector<Value>>(content, key);
         if (option::is_none(&idx_opt)) {
             vec_map::insert(content, *key, values);
@@ -61,10 +61,10 @@ module monolith::registry {
     }
 
     public fun get<Witness: drop, Key: copy + drop, Value: copy + drop>(
-        registry: &Registry<Witness, Key, Value>,
+        self: &Registry<Witness, Key, Value>,
         key: &Key,
     ): Option<vector<Value>> {
-        let content = &registry.content;
+        let content = &self.content;
         let idx_opt = vec_map::get_idx_opt(content, key);
         if (option::is_none(&idx_opt)) {
             option::none<vector<Value>>()
@@ -76,35 +76,35 @@ module monolith::registry {
     }
 
     public fun get_unwrap<Witness: drop, Key: copy + drop, Value: copy + drop>(
-        registry: &Registry<Witness, Key, Value>,
+        self: &Registry<Witness, Key, Value>,
         key: &Key,
     ): vector<Value> {
-        let ret = get(registry, key);
+        let ret = get(self, key);
         option::extract(&mut ret)
     }
 
     public fun get_entry_by_idx<Witness: drop, Key: copy + drop, Value: copy + drop>(
-        registry: &Registry<Witness, Key, Value>,
+        self: &Registry<Witness, Key, Value>,
         idx: u64,
     ): (&Key, &vector<Value>) {
-        let content = &registry.content;
+        let content = &self.content;
         vec_map::get_entry_by_idx(content, idx)
     }
 
     public fun size<Witness: drop, Key: copy + drop, Value: copy + drop>(
-        registry: &Registry<Witness, Key, Value>,
+        self: &Registry<Witness, Key, Value>,
     ): u64 {
-        let content = &registry.content;
+        let content = &self.content;
         vec_map::size(content)
     }
 
     public fun contains_value<Witness: drop, Key: copy + drop, Value: copy + drop>(
-        registry: &Registry<Witness, Key, Value>,
+        self: &Registry<Witness, Key, Value>,
         value: Value,
     ): bool {
         let idx = 0;
-        while (idx < size(registry)) {
-            let (_, values) = get_entry_by_idx(registry, idx);
+        while (idx < size(self)) {
+            let (_, values) = get_entry_by_idx(self, idx);
             if (vector::contains(values, &value)) {
                 return true
             };

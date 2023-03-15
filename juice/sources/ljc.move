@@ -19,7 +19,7 @@ module juice::ljc {
     const JuiceDecimals: u8 = 9;
     const JuiceSymbol: vector<u8> = b"LJC";
     const JuiceName: vector<u8> = b"Lemon Juice";
-    const JuiceDescription: vector<u8> = b"Some description";
+    const JuiceDescription: vector<u8> = b"Lemon Juice is a special type of reward token that can be earned both in the Battlemon metaverse and in the shooter itself by completing specific tasks and objectives. These tokens can be used to unlock exclusive in-game items such as new weapons, abilities, and other gameplay elements. Unlike some other types of tokens, Lemon Juice tokens do not have a time limit for use, so players can save them up and use them whenever they want. This makes them a valuable and flexible resource for players who want to customize their gameplay experience and access new features.";
     const JuiceIconUrl: vector<u8> = b"https://demo.battlemon.com/favicon.png";
     const UnlockPeriod: u64 = 365;
 

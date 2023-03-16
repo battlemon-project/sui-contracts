@@ -18,7 +18,7 @@ module lemon::lemon {
     // ------------------------Structs---------------------
     struct LEMONS has drop {}
 
-    struct Lemon<phantom Kind> has key, store {
+    struct Lemon has key, store {
         id: UID,
         url: Url,
         traits: vector<Trait<String, String>>

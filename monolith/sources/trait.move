@@ -1,13 +1,13 @@
 module monolith::trait {
-    use sui::tx_context::TxContext;
     use monolith::registry::{Self, Registry};
-    use monolith::admin::{AdminCap};
     use monolith::iter::{Self};
     use monolith::randomness::{Self, Randomness};
     use std::vector;
     use std::option::{Self, Option};
     use std::hash;
     use std::string::{Self, String, utf8};
+    use sui::tx_context::TxContext;
+
 
     /// ===========Constants============
     const MutationChance: u8 = 5;
@@ -57,10 +57,9 @@ module monolith::trait {
     }
 
     public fun generate_all<Witness: drop, TraitName: copy + drop, FlavourName: copy + drop>(
-        _admin: &AdminCap<Witness>,
         registry: &mut Registry<Witness, TraitName, Flavour<FlavourName>>,
         randomness: &mut Randomness<Witness>,
-        ctx: &mut TxContext
+        ctx: &mut TxContext,
     ): vector<Trait<TraitName, FlavourName>> {
         randomness::update(randomness, ctx);
         let source = randomness::source(randomness);
@@ -91,7 +90,6 @@ module monolith::trait {
     }
 
     public fun generate_by_name<Witness: drop, TraitName: copy + drop, FlavourName: copy + drop>(
-        _admin: &AdminCap<Witness>,
         registry: &mut Registry<Witness, TraitName, Flavour<FlavourName>>,
         randomness: &mut Randomness<Witness>,
         name: &TraitName,
@@ -112,7 +110,6 @@ module monolith::trait {
     }
 
     public fun generate_by_idx<Witness: drop, TraitName: copy + drop, FlavourName: copy + drop>(
-        _admin: &AdminCap<Witness>,
         registry: &mut Registry<Witness, TraitName, Flavour<FlavourName>>,
         randomness: &mut Randomness<Witness>,
         idx: u64,

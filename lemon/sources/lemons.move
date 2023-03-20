@@ -1,19 +1,24 @@
-module lemon::lemon {
+module lemon::lemons {
     use std::string::{Self, String};
+    use std::vector;
+    use std::option;
     use sui::url::{Self, Url};
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+    use sui::event::emit;
+    use sui::coin::{Self, Coin};
+    use sui::sui::SUI;
     use monolith::registry::{Self, Registry};
     use monolith::admin::AdminCap;
     use monolith::trait::{Self, Trait, Flavour};
     use monolith::randomness::{Self, Randomness};
-    use sui::transfer;
-    use std::vector;
-    use std::option;
-    use sui::event::emit;
+    use lemon::mint_config::{Self, MintConfig};
+    use sui::balance::{Self, Balance};
 
+    friend lemon::lemon_pool;
     // ------------------------ERRORS----------------------
-    const EItemProhibbitedForAdding: u64 = 256;
+    const EItemProhibbitedForAdding: u64 = 0;
 
     // ------------------------Structs---------------------
     struct LEMONS has drop {}
@@ -29,6 +34,11 @@ module lemon::lemon {
         traits: vector<Trait<String, String>>
     }
 
+    struct Treasury has key {
+        id: UID,
+        balance: Balance<SUI>,
+    }
+
     // ================Init=====================
     fun init(ctx: &mut TxContext) {
         let (admin, lemon_registry)
@@ -36,6 +46,15 @@ module lemon::lemon {
         populate_registry(&admin, &mut lemon_registry);
         transfer::transfer(admin, tx_context::sender(ctx));
         transfer::share_object(lemon_registry);
+
+        let treasure = Treasury {
+            id: object::new(ctx),
+            balance: balance::zero(),
+        };
+        transfer::share_object(treasure);
+
+        let mint_config = mint_config::new<LEMONS>(ctx);
+        transfer::share_object(mint_config);
 
         let randomness = randomness::new(LEMONS {}, ctx);
         transfer::share_object(randomness);
@@ -195,44 +214,62 @@ module lemon::lemon {
         registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *teeth_flavours);
     }
 
-    // ================Public EntryPoints=====================
-    public entry fun create(
-        admin: &AdminCap<LEMONS>,
+    // ================EntryPoints=====================
+    public entry fun mint(
         registry: &mut Registry<LEMONS, String, Flavour<String>>,
         randomness: &mut Randomness<LEMONS>,
-        ctx: &mut TxContext
+        treasure: &mut Treasury,
+        mint_config: &mut MintConfig<LEMONS>,
+        sui: Coin<SUI>,
+        ctx: &mut TxContext,
     ) {
-        let lemon = new(admin, registry, randomness, ctx);
+        mint_config::check_sui_for_mint(mint_config, &sui);
+        mint_config::check_supply(mint_config);
+        mint_config::check_minted_for_account(mint_config, ctx);
 
+        if (!mint_config::is_whitelisted(mint_config, ctx)) {
+            mint_config::check_mint_lock(mint_config);
+        };
+
+        deposit_treasure(treasure, sui);
+        mint_config::increment_minted(mint_config);
+        mint_config::increment_minted_for_account(mint_config, ctx);
+
+        let lemon = new(registry, randomness, ctx);
         emit(LemonCreated {
             id: object::id(&lemon),
             url: lemon.url,
             traits: lemon.traits,
         });
-
         transfer::transfer(lemon, tx_context::sender(ctx))
     }
 
-    // public entry fun populate_pool(
-    //     admin: &Admin<LEMONS>,
-    //     registry: &mut Registry<LEMONS, String, Flavour<String>>,
-    //     randomness: &mut Randomness<LEMONS>,
-    //     pool: &mut
-    //     ctx: &mut TxContext,
-    // ) {}
+    public entry fun withdraw_treasure(
+        _: AdminCap<LEMONS>,
+        treasure: &mut Treasury,
+        amount: u64,
+        ctx: &mut TxContext
+    ) {
+        let sui = coin::take(&mut treasure.balance, amount, ctx);
+        transfer::transfer(sui, tx_context::sender(ctx));
+    }
 
     // ================Helpers=====================
     public fun uid(self: &Lemon): &UID {
         &self.id
     }
 
+    fun deposit_treasure(treasure: &mut Treasury, sui: Coin<SUI>) {
+        let balance = coin::into_balance(sui);
+        balance::join(&mut treasure.balance, balance);
+    }
+
     fun new(
-        admin: &AdminCap<LEMONS>,
         registry: &mut Registry<LEMONS, String, Flavour<String>>,
         randomness: &mut Randomness<LEMONS>,
         ctx: &mut TxContext,
     ): Lemon {
-        let blueprint = new_blueprint(admin, registry, randomness, ctx);
+        let blueprint = new_blueprint(registry, randomness, ctx);
         from_blueprint(blueprint, ctx)
     }
 
@@ -240,7 +277,7 @@ module lemon::lemon {
         trait::new_flavour(string::utf8(name), option::some(weight))
     }
 
-    public fun from_blueprint(blueprint: Blueprint, ctx: &mut TxContext): Lemon {
+    public(friend) fun from_blueprint(blueprint: Blueprint, ctx: &mut TxContext): Lemon {
         Lemon {
             id: object::new(ctx),
             url: blueprint.url,
@@ -259,14 +296,13 @@ module lemon::lemon {
     }
 
     public fun new_blueprint(
-        admin: &AdminCap<LEMONS>,
         registry: &mut Registry<LEMONS, String, Flavour<String>>,
         randomness: &mut Randomness<LEMONS>,
-        ctx: &mut TxContext
+        ctx: &mut TxContext,
     ): Blueprint {
         Blueprint {
             url: url::new_unsafe_from_bytes(b"https://battlemon.com/assets/default-lemon.png"),
-            traits: trait::generate_all<LEMONS, String, String>(admin, registry, randomness, ctx)
+            traits: trait::generate_all<LEMONS, String, String>(registry, randomness, ctx)
         }
     }
 

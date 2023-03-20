@@ -85,6 +85,10 @@ module juice::ljc {
         coin::take(&mut self.unlocked, amount, ctx)
     }
 
+    public fun put(self: &mut JuiceTreasury, juice: Coin<LJC>) {
+        coin::put(&mut self.unlocked, juice);
+    }
+
     fun setup_emmisions(): vector<u64> {
         let ret = vector::empty();
         vector::push_back(&mut ret, 200000);

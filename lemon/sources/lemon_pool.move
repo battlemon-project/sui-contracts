@@ -21,8 +21,9 @@ module lemon::lemon_pool {
     const ENotEnoughPoolBalance: u64 = 2;
 
     // ====CONST====
-    const LEMON_SWAP_REWARD: u64 = 950 * 1000000000;
-    const JUICE_SWAP_COST: u64 = 1000 * 1000000000;
+    const LemonSwapReward: u64 = 950 * 1000000000;
+    const JuiceRandomSwapCost: u64 = 1000 * 1000000000;
+    const JuiceNotRandomSwapCost: u64 = 1050 * 1000000000;
 
     struct LemonPool has key {
         id: UID,
@@ -57,14 +58,14 @@ module lemon::lemon_pool {
     }
 
 
-    public entry fun swap_juice(
+    public entry fun swap_juice_to_random(
         juice: Coin<LJC>,
         pool: &mut LemonPool,
         ctx: &mut TxContext
     ) {
         let juice_value = coin::value(&juice);
-        assert!((juice_value % JUICE_SWAP_COST) == 0, ENotCorrectCoinAmount);
-        let swap_quantity = juice_value / JUICE_SWAP_COST;
+        assert!((juice_value % JuiceRandomSwapCost) == 0, ENotCorrectCoinAmount);
+        let swap_quantity = juice_value / JuiceRandomSwapCost;
         assert!(vector::length(&pool.blueprints) >= swap_quantity, ENotEnoughLemons);
         coin::put(&mut pool.balance, juice);
 
@@ -82,7 +83,7 @@ module lemon::lemon_pool {
         ctx: &mut TxContext
     ) {
         let lemons_quantity = vector::length(&lemons);
-        let total_reward = (LEMON_SWAP_REWARD) * lemons_quantity;
+        let total_reward = (LemonSwapReward) * lemons_quantity;
         assert!(balance::value(&pool.balance) < total_reward, ENotEnoughPoolBalance);
 
         let lemons_quantity_it = iter::from_range(0, lemons_quantity);

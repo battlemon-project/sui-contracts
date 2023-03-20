@@ -6,7 +6,7 @@ module lemon::lemon_pool {
     use sui::balance::{Self, Balance};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use juice::ljc::LJC;
+    use juice::ljc::{Self, LJC, JuiceTreasury};
     use lemon::lemons::{Self, Blueprint, LEMONS, Lemon};
     use monolith::admin::{AdminCap};
     use monolith::registry::Registry;
@@ -23,6 +23,8 @@ module lemon::lemon_pool {
     // ====CONST====
     const LemonSwapReward: u64 = 950 * 1000000000;
     const JuiceRandomSwapCost: u64 = 1000 * 1000000000;
+    const JuiceRandomSwapFee: u64 = 50 * 1000000000;
+    const JuiceNoRandomSwapFee: u64 = 100 * 1000000000;
     const JuiceNotRandomSwapCost: u64 = 1050 * 1000000000;
 
     struct LemonPool has key {
@@ -60,6 +62,7 @@ module lemon::lemon_pool {
 
     public entry fun swap_juice_to_random(
         self: &mut LemonPool,
+        treasury: &mut JuiceTreasury,
         juice: Coin<LJC>,
         ctx: &mut TxContext
     ) {
@@ -67,6 +70,9 @@ module lemon::lemon_pool {
         assert!((juice_value % JuiceRandomSwapCost) == 0, ENotCorrectCoinAmount);
         let swap_quantity = juice_value / JuiceRandomSwapCost;
         assert!(vector::length(&self.blueprints) >= swap_quantity, ENotEnoughLemons);
+
+        let juice_to_treasury = coin::split(&mut juice, JuiceRandomSwapCost, ctx);
+        ljc::put(treasury, juice_to_treasury);
         coin::put(&mut self.balance, juice);
 
         let swap_quantity_it = iter::from_range(0, swap_quantity);
@@ -79,13 +85,18 @@ module lemon::lemon_pool {
 
     public entry fun swap_juice(
         self: &mut LemonPool,
+        treasury: &mut JuiceTreasury,
         juice: Coin<LJC>,
         index: u64,
         ctx: &mut TxContext
     ) {
         assert!(coin::value(&juice) == JuiceNotRandomSwapCost, ENotCorrectCoinAmount);
         let blueprint = vector::remove(&mut self.blueprints, index);
+
+        let juice_to_treasury = coin::split(&mut juice, JuiceNotRandomSwapCost, ctx);
+        ljc::put(treasury, juice_to_treasury);
         coin::put(&mut self.balance, juice);
+
         let lemon = lemons::from_blueprint(blueprint, ctx);
         transfer::transfer(lemon, tx_context::sender(ctx));
     }

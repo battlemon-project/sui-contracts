@@ -26,11 +26,13 @@ module lemon::lemons {
     struct Lemon has key, store {
         id: UID,
         url: Url,
+        genesis: String,
         traits: vector<Trait<String, String>>
     }
 
     struct Blueprint has store, drop {
         url: Url,
+        genesis: String,
         traits: vector<Trait<String, String>>
     }
 
@@ -231,11 +233,11 @@ module lemon::lemons {
             mint_config::check_mint_lock(mint_config);
         };
 
-        deposit_treasure(treasure, sui);
+        put_in_treasure(treasure, sui);
         mint_config::increment_minted(mint_config);
         mint_config::increment_minted_for_account(mint_config, ctx);
 
-        let lemon = new(registry, randomness, ctx);
+        let lemon = new(registry, randomness, string::utf8(b"SUI"), ctx);
         emit(LemonCreated {
             id: object::id(&lemon),
             url: lemon.url,
@@ -244,7 +246,7 @@ module lemon::lemons {
         transfer::transfer(lemon, tx_context::sender(ctx))
     }
 
-    public entry fun withdraw_treasure(
+    public entry fun take_from_treasure(
         _: AdminCap<LEMONS>,
         treasure: &mut Treasury,
         amount: u64,
@@ -259,7 +261,7 @@ module lemon::lemons {
         &self.id
     }
 
-    fun deposit_treasure(treasure: &mut Treasury, sui: Coin<SUI>) {
+    fun put_in_treasure(treasure: &mut Treasury, sui: Coin<SUI>) {
         let balance = coin::into_balance(sui);
         balance::join(&mut treasure.balance, balance);
     }
@@ -267,9 +269,10 @@ module lemon::lemons {
     fun new(
         registry: &mut Registry<LEMONS, String, Flavour<String>>,
         randomness: &mut Randomness<LEMONS>,
+        genesis: String,
         ctx: &mut TxContext,
     ): Lemon {
-        let blueprint = new_blueprint(registry, randomness, ctx);
+        let blueprint = new_blueprint(registry, randomness, genesis, ctx);
         from_blueprint(blueprint, ctx)
     }
 
@@ -281,16 +284,18 @@ module lemon::lemons {
         Lemon {
             id: object::new(ctx),
             url: blueprint.url,
+            genesis: blueprint.genesis,
             traits: blueprint.traits,
         }
     }
 
     public fun into_blueprint(lemon: Lemon): Blueprint {
-        let Lemon { id, url, traits } = lemon;
+        let Lemon { id, url, genesis, traits } = lemon;
         object::delete(id);
 
         Blueprint {
             url,
+            genesis,
             traits
         }
     }
@@ -298,11 +303,13 @@ module lemon::lemons {
     public fun new_blueprint(
         registry: &mut Registry<LEMONS, String, Flavour<String>>,
         randomness: &mut Randomness<LEMONS>,
+        genesis: String,
         ctx: &mut TxContext,
     ): Blueprint {
         Blueprint {
             url: url::new_unsafe_from_bytes(b"https://battlemon.com/assets/default-lemon.png"),
-            traits: trait::generate_all<LEMONS, String, String>(registry, randomness, ctx)
+            genesis,
+            traits: trait::generate_all<LEMONS, String, String>(registry, randomness, ctx),
         }
     }
 

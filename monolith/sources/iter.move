@@ -17,7 +17,7 @@ module monolith::iter {
     public fun from_range(begin: u64, end: u64): Iter<u64> {
         let ret = vector::empty<u64>();
         let current = begin;
-        while (current <= end) {
+        while (current < end) {
             vector::push_back(&mut ret, current);
             current = current + 1;
         };

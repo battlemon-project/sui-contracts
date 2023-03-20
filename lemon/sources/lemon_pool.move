@@ -1,7 +1,7 @@
 module lemon::lemon_pool {
     use std::vector;
     use std::string::{Self, String};
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
     use sui::transfer;
@@ -59,49 +59,62 @@ module lemon::lemon_pool {
 
 
     public entry fun swap_juice_to_random(
+        self: &mut LemonPool,
         juice: Coin<LJC>,
-        pool: &mut LemonPool,
         ctx: &mut TxContext
     ) {
         let juice_value = coin::value(&juice);
         assert!((juice_value % JuiceRandomSwapCost) == 0, ENotCorrectCoinAmount);
         let swap_quantity = juice_value / JuiceRandomSwapCost;
-        assert!(vector::length(&pool.blueprints) >= swap_quantity, ENotEnoughLemons);
-        coin::put(&mut pool.balance, juice);
+        assert!(vector::length(&self.blueprints) >= swap_quantity, ENotEnoughLemons);
+        coin::put(&mut self.balance, juice);
 
         let swap_quantity_it = iter::from_range(0, swap_quantity);
         while (iter::has_next(&swap_quantity_it)) {
-            let lemon = take_lemon(pool, ctx);
+            let lemon = take_lemon(self, ctx);
             transfer::transfer(lemon, tx_context::sender(ctx));
             iter::next(&mut swap_quantity_it);
         };
     }
 
+    public entry fun swap_juice(
+        self: &mut LemonPool,
+        juice: Coin<LJC>,
+        index: u64,
+        ctx: &mut TxContext
+    ) {
+        assert!(coin::value(&juice) == JuiceNotRandomSwapCost, ENotCorrectCoinAmount);
+        let blueprint = vector::remove(&mut self.blueprints, index);
+        coin::put(&mut self.balance, juice);
+        let lemon = lemons::from_blueprint(blueprint, ctx);
+        transfer::transfer(lemon, tx_context::sender(ctx));
+    }
+
     public entry fun swap_lemons(
+        self: &mut LemonPool,
         lemons: vector<Lemon>,
-        pool: &mut LemonPool,
         ctx: &mut TxContext
     ) {
         let lemons_quantity = vector::length(&lemons);
         let total_reward = (LemonSwapReward) * lemons_quantity;
-        assert!(balance::value(&pool.balance) < total_reward, ENotEnoughPoolBalance);
+        assert!(balance::value(&self.balance) < total_reward, ENotEnoughPoolBalance);
 
         let lemons_quantity_it = iter::from_range(0, lemons_quantity);
         while (iter::has_next(&lemons_quantity_it)) {
             let lemon = vector::pop_back(&mut lemons);
             let blueprint = lemons::into_blueprint(lemon);
-            vector::push_back(&mut pool.blueprints, blueprint);
+            vector::push_back(&mut self.blueprints, blueprint);
             iter::next(&mut lemons_quantity_it);
         };
 
-        let reward = coin::take(&mut pool.balance, total_reward, ctx);
+        let reward = coin::take(&mut self.balance, total_reward, ctx);
         transfer::transfer(reward, tx_context::sender(ctx));
     }
 
     // ====helpers====
-    fun take_lemon(pool: &mut LemonPool, ctx: &mut TxContext): Lemon {
-        let idx = random::rng(0, vector::length(&pool.blueprints), ctx);
-        let blueprint = vector::remove(&mut pool.blueprints, idx);
+    fun take_lemon(self: &mut LemonPool, ctx: &mut TxContext): Lemon {
+        let idx = random::rng(0, vector::length(&self.blueprints), ctx);
+        let blueprint = vector::remove(&mut self.blueprints, idx);
         lemons::from_blueprint(blueprint, ctx)
     }
 }

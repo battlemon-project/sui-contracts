@@ -8,12 +8,21 @@ module monolith::iter {
     }
 
     public fun from<T: copy + drop>(vec: vector<T>): Iter<T> {
-        let iter = Iter {
+        Iter {
             counter: 0,
             iterable: vec,
+        }
+    }
+
+    public fun from_range(begin: u64, end: u64): Iter<u64> {
+        let ret = vector::empty<u64>();
+        let current = begin;
+        while (current <= end) {
+            vector::push_back(&mut ret, current);
+            current = current + 1;
         };
 
-        iter
+        from(ret)
     }
 
     public fun has_next<T: copy + drop>(self: &Iter<T>): bool {

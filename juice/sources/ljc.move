@@ -47,7 +47,7 @@ module juice::ljc {
         );
 
         let admin_cap = admin::new(JUICE {}, ctx);
-        transfer::transfer(admin_cap, tx_context::sender(ctx));
+        transfer::public_transfer(admin_cap, tx_context::sender(ctx));
 
         let max_supply = coin::mint_balance(&mut treasury_cap, JuiceMaxSupply);
 
@@ -64,7 +64,7 @@ module juice::ljc {
         transfer::public_transfer(treasury_cap, tx_context::sender(ctx))
     }
 
-    public entry fun unlock(self: &mut JuiceTreasury, ctx: &mut TxContext) {
+    public fun unlock(self: &mut JuiceTreasury, ctx: &mut TxContext) {
         assert!(!vector::is_empty(&self.emmisions), ENoMoreEmissions);
         let current_epoch = tx_context::epoch(ctx);
         assert!(self.next_epoch_unlock <= current_epoch, ECurrentEpochLessThanUnlockEpoch);

@@ -59,9 +59,9 @@ module juice::ljc {
             next_epoch_unlock: tx_context::epoch(ctx),
         };
 
-        transfer::freeze_object(metadata);
+        transfer::public_freeze_object(metadata);
         transfer::share_object(treasure);
-        transfer::transfer(treasury_cap, tx_context::sender(ctx))
+        transfer::public_transfer(treasury_cap, tx_context::sender(ctx))
     }
 
     public entry fun unlock(self: &mut JuiceTreasury, ctx: &mut TxContext) {

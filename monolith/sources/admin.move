@@ -1,7 +1,6 @@
 module monolith::admin {
-    use sui::object::UID;
+    use sui::object::{Self, UID};
     use sui::tx_context::TxContext;
-    use sui::object;
 
     struct AdminCap<phantom Witness: drop> has key, store {
         id: UID,

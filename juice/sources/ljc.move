@@ -1,19 +1,17 @@
 module juice::ljc {
-    use sui::tx_context::{TxContext};
-    use sui::coin::{Self, Coin};
     use std::option;
+    use std::vector;
     use sui::transfer;
-    use sui::tx_context;
+    use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID};
     use sui::balance::{Self, Balance};
-    use monolith::admin;
-    use std::vector;
+    use sui::coin::{Self, Coin};
     use sui::url::{Self};
-    use monolith::admin::AdminCap;
+    use monolith::admin::{Self, AdminCap};
 
     struct LJC has drop {}
 
-    struct JUICE has drop {}
+    struct Juice has drop {}
 
     const JuiceDecimals: u8 = 9;
     const JuiceMaxSupply: u64 = 46000000 * 1000000000;
@@ -35,9 +33,9 @@ module juice::ljc {
         next_epoch_unlock: u64,
     }
 
-    fun init(witness: LJC, ctx: &mut TxContext) {
+    fun init(otw: LJC, ctx: &mut TxContext) {
         let (treasury_cap, metadata) = coin::create_currency(
-            witness,
+            otw,
             JuiceDecimals,
             JuiceSymbol,
             JuiceName,
@@ -46,7 +44,7 @@ module juice::ljc {
             ctx
         );
 
-        let admin_cap = admin::new(JUICE {}, ctx);
+        let admin_cap = admin::new(Juice {}, ctx);
         transfer::public_transfer(admin_cap, tx_context::sender(ctx));
 
         let max_supply = coin::mint_balance(&mut treasury_cap, JuiceMaxSupply);

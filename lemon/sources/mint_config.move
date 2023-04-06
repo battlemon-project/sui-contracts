@@ -18,7 +18,7 @@ module lemon::mint_config {
     const MintLimitPerAccount: u8 = 3;
     const Supply: u64 = 8888;
 
-    struct MintConfig<phantom Kind> has key {
+    struct MintConfig<phantom Kind> has key, store {
         id: UID,
         mint_cost: u64,
         minted: u64,

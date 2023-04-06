@@ -1,10 +1,10 @@
 [package]
 name = "Monolith"
 version = "0.0.1"
+#published-at = "0xa94442c87bf0c6e4ded7ed7caf11fe11744fc0aa402de920f7fc5d989525f71f"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
 
 [addresses]
-#monolith = "0x0"
-monolith = "0x870aef9a68b83c5885de1fc32352aed527e81574"
+monolith = "0x0"

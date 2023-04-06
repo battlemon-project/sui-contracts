@@ -1,13 +1,13 @@
 module lemon::lemon_pool {
     use std::vector;
     use std::string::{Self, String};
-    use sui::object::{Self, UID, ID};
+    use sui::object::{Self, UID};
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use juice::ljc::{Self, LJC, JuiceTreasury};
-    use lemon::lemons::{Self, Blueprint, LEMONS, Lemon};
+    use lemon::lemons::{Self, Blueprint, Lemons, Lemon};
     use monolith::admin::{AdminCap};
     use monolith::registry::Registry;
     use monolith::randomness::Randomness;
@@ -42,11 +42,11 @@ module lemon::lemon_pool {
         transfer::share_object(pool);
     }
 
-    public entry fun populate_pool(
-        _: &AdminCap<LEMONS>,
+    public fun populate_pool(
+        _: &AdminCap<Lemons>,
         self: &mut LemonPool,
-        registry: &mut Registry<LEMONS, String, Flavour<String>>,
-        randomness: &mut Randomness<LEMONS>,
+        registry: &mut Registry<Lemons, String, Flavour<String>>,
+        randomness: &mut Randomness<Lemons>,
         quantity: u64,
         ctx: &mut TxContext
     ) {
@@ -60,7 +60,7 @@ module lemon::lemon_pool {
     }
 
 
-    public entry fun swap_juice_to_random(
+    public fun swap_juice_to_random(
         self: &mut LemonPool,
         treasury: &mut JuiceTreasury,
         juice: Coin<LJC>,
@@ -78,12 +78,12 @@ module lemon::lemon_pool {
         let swap_quantity_it = iter::from_range(0, swap_quantity);
         while (iter::has_next(&swap_quantity_it)) {
             let lemon = take_lemon(self, ctx);
-            transfer::transfer(lemon, tx_context::sender(ctx));
+            transfer::public_transfer(lemon, tx_context::sender(ctx));
             iter::next(&mut swap_quantity_it);
         };
     }
 
-    public entry fun swap_juice(
+    public fun swap_juice(
         self: &mut LemonPool,
         treasury: &mut JuiceTreasury,
         juice: Coin<LJC>,
@@ -98,10 +98,10 @@ module lemon::lemon_pool {
         coin::put(&mut self.balance, juice);
 
         let lemon = lemons::from_blueprint(blueprint, ctx);
-        transfer::transfer(lemon, tx_context::sender(ctx));
+        transfer::public_transfer(lemon, tx_context::sender(ctx));
     }
 
-    public entry fun swap_lemons(
+    public fun swap_lemon(
         self: &mut LemonPool,
         lemons: vector<Lemon>,
         ctx: &mut TxContext
@@ -117,9 +117,9 @@ module lemon::lemon_pool {
             vector::push_back(&mut self.blueprints, blueprint);
             iter::next(&mut lemons_quantity_it);
         };
-
+        vector::destroy_empty(lemons);
         let reward = coin::take(&mut self.balance, total_reward, ctx);
-        transfer::transfer(reward, tx_context::sender(ctx));
+        transfer::public_transfer(reward, tx_context::sender(ctx));
     }
 
     // ====helpers====

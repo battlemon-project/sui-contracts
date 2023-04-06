@@ -21,7 +21,7 @@ module lemon::lemons {
     const EItemProhibbitedForAdding: u64 = 0;
 
     // ------------------------Structs---------------------
-    struct LEMONS has drop {}
+    struct Lemons has drop {}
 
     struct Lemon has key, store {
         id: UID,
@@ -44,10 +44,10 @@ module lemon::lemons {
     // ================Init=====================
     fun init(ctx: &mut TxContext) {
         let (admin, lemon_registry)
-            = registry::new<LEMONS, String, Flavour<String>>(LEMONS {}, ctx);
+            = registry::new<Lemons, String, Flavour<String>>(Lemons {}, ctx);
         populate_registry(&admin, &mut lemon_registry);
-        transfer::transfer(admin, tx_context::sender(ctx));
-        transfer::share_object(lemon_registry);
+        transfer::public_transfer(admin, tx_context::sender(ctx));
+        transfer::public_share_object(lemon_registry);
 
         let treasure = Treasury {
             id: object::new(ctx),
@@ -55,14 +55,14 @@ module lemon::lemons {
         };
         transfer::share_object(treasure);
 
-        let mint_config = mint_config::new<LEMONS>(ctx);
-        transfer::share_object(mint_config);
+        let mint_config = mint_config::new<Lemons>(ctx);
+        transfer::public_share_object(mint_config);
 
-        let randomness = randomness::new(LEMONS {}, ctx);
-        transfer::share_object(randomness);
+        let randomness = randomness::new(Lemons {}, ctx);
+        transfer::public_share_object(randomness);
     }
 
-    fun populate_registry(admin: &AdminCap<LEMONS>, registry: &mut Registry<LEMONS, String, Flavour<String>>) {
+    fun populate_registry(admin: &AdminCap<Lemons>, registry: &mut Registry<Lemons, String, Flavour<String>>) {
         // exo_top
         let exo_top_flavours = &mut vector::empty<Flavour<String>>();
         vector::push_back(
@@ -82,7 +82,7 @@ module lemon::lemons {
             new_flavour(b"ExoTop_Golden", 255)
         );
         let group_name = string::utf8(b"exo_top");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *exo_top_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *exo_top_flavours);
 
         // exo_bot
         let exo_bot_flavours = &mut vector::empty<Flavour<String>>();
@@ -103,7 +103,7 @@ module lemon::lemons {
             new_flavour(b"ExoBot_Steel", 255)
         );
         let group_name = string::utf8(b"exo_bot");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *exo_bot_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *exo_bot_flavours);
 
         // feet
         let feet_flavours = &mut vector::empty<Flavour<String>>();
@@ -124,7 +124,7 @@ module lemon::lemons {
             new_flavour(b"Feet_Golden", 255)
         );
         let group_name = string::utf8(b"feet");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *feet_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *feet_flavours);
 
         // eyes
         let eyes_flavours = &mut vector::empty<Flavour<String>>();
@@ -145,7 +145,7 @@ module lemon::lemons {
             new_flavour(b"Eyes_Zombie", 255)
         );
         let group_name = string::utf8(b"eyes");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *eyes_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *eyes_flavours);
 
 
         // hands
@@ -167,7 +167,7 @@ module lemon::lemons {
             new_flavour(b"Hands_Golden", 255)
         );
         let group_name = string::utf8(b"hands");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *hands_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *hands_flavours);
 
         // head
         let head_flavours = &mut vector::empty<Flavour<String>>();
@@ -188,7 +188,7 @@ module lemon::lemons {
             new_flavour(b"Head_Lime", 255)
         );
         let group_name = string::utf8(b"head");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *head_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *head_flavours);
 
         //teeth
         let teeth_flavours = &mut vector::empty<Flavour<String>>();
@@ -213,15 +213,15 @@ module lemon::lemons {
             new_flavour(b"Teeth_Grillz_Silver", 255)
         );
         let group_name = string::utf8(b"teeth");
-        registry::append<LEMONS, String, Flavour<String>>(admin, registry, &group_name, *teeth_flavours);
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *teeth_flavours);
     }
 
     // ================EntryPoints=====================
-    public entry fun mint(
-        registry: &mut Registry<LEMONS, String, Flavour<String>>,
-        randomness: &mut Randomness<LEMONS>,
+    public fun mint(
+        registry: &mut Registry<Lemons, String, Flavour<String>>,
+        randomness: &mut Randomness<Lemons>,
         treasure: &mut Treasury,
-        mint_config: &mut MintConfig<LEMONS>,
+        mint_config: &mut MintConfig<Lemons>,
         sui: Coin<SUI>,
         ctx: &mut TxContext,
     ) {
@@ -246,14 +246,24 @@ module lemon::lemons {
         transfer::transfer(lemon, tx_context::sender(ctx))
     }
 
-    public entry fun take_from_treasure(
-        _: AdminCap<LEMONS>,
+    public fun take_from_treasure(
+        _: &AdminCap<Lemons>,
         treasure: &mut Treasury,
         amount: u64,
         ctx: &mut TxContext
     ) {
         let sui = coin::take(&mut treasure.balance, amount, ctx);
-        transfer::transfer(sui, tx_context::sender(ctx));
+        transfer::public_transfer(sui, tx_context::sender(ctx));
+    }
+
+    public fun debug_setup(
+        _: &AdminCap<Lemons>,
+        config: &mut MintConfig<Lemons>,
+        ctx: &mut TxContext,
+    ) {
+        mint_config::add_to_whitelist(config, tx_context::sender(ctx));
+        mint_config::set_mint_cost(config, 10000);
+        mint_config::unlock_mint(config);
     }
 
     // ================Helpers=====================
@@ -267,8 +277,8 @@ module lemon::lemons {
     }
 
     fun new(
-        registry: &mut Registry<LEMONS, String, Flavour<String>>,
-        randomness: &mut Randomness<LEMONS>,
+        registry: &mut Registry<Lemons, String, Flavour<String>>,
+        randomness: &mut Randomness<Lemons>,
         genesis: String,
         ctx: &mut TxContext,
     ): Lemon {
@@ -301,15 +311,15 @@ module lemon::lemons {
     }
 
     public fun new_blueprint(
-        registry: &mut Registry<LEMONS, String, Flavour<String>>,
-        randomness: &mut Randomness<LEMONS>,
+        registry: &mut Registry<Lemons, String, Flavour<String>>,
+        randomness: &mut Randomness<Lemons>,
         genesis: String,
         ctx: &mut TxContext,
     ): Blueprint {
         Blueprint {
             url: url::new_unsafe_from_bytes(b"https://battlemon.com/assets/default-lemon.png"),
             genesis,
-            traits: trait::generate_all<LEMONS, String, String>(registry, randomness, ctx),
+            traits: trait::generate_all<Lemons, String, String>(registry, randomness, ctx),
         }
     }
 
@@ -338,8 +348,8 @@ module lemon::lemons {
     //     };
     //     test_scenario::next_tx(scenario, @alice);
     //     {
-    //         let admin = test_scenario::take_from_sender<Admin<LEMONS>>(scenario);
-    //         let lemon_registry = test_scenario::take_shared<Registry<LEMONS, String, Flavour<String>>>(scenario);
+    //         let admin = test_scenario::take_from_sender<Admin<Lemons>>(scenario);
+    //         let lemon_registry = test_scenario::take_shared<Registry<Lemons, String, Flavour<String>>>(scenario);
     //         let ctx = test_scenario::ctx(scenario);
     //         create_lemon(&admin, &mut lemon_registry, ctx);
     //         test_scenario::return_shared(lemon_registry);

@@ -1,9 +1,10 @@
 [package]
 name = "Juice"
 version = "0.0.1"
+#published_at = "0xe2717ab984c50ec4e0a03596ac703089cba44c9893b9673c828b3ba7d4d42cf8"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework/", rev = "devnet" }
 Monolith = { local = "../monolith" }
 
 [addresses]

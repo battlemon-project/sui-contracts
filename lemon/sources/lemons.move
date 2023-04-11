@@ -214,13 +214,106 @@ module lemon::lemons {
         );
         let group_name = string::utf8(b"teeth");
         registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *teeth_flavours);
+        //hair
+        let hair_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Dragon_Short_Orange", 15)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Dragon_Red", 30)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Hedgehog_Neon_Red", 45)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Dreadlocks_Brown", 60)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Ponytail_Gray", 75)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Curly_Gray", 90)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Mohawk_Purple", 105)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Fitness_Blue", 120)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Box_Gray", 135)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Topknot_Blue", 150)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Mizura_Marine", 165)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Sakayaki_Gray", 180)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Leftover_Blue", 195)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Disco_Iroquois_Lime", 210)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Fauxhawk_Green_Orange", 225)
+        );
+        vector::push_back(
+            hair_flavours,
+            new_flavour(b"Hair_Spikes_Gray", 255)
+        );
+        let group_name = string::utf8(b"hair");
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *hair_flavours);
+
+        //scar
+        let scar_flavours = &mut vector::empty<Flavour<String>>();
+        vector::push_back(
+            scar_flavours,
+            new_flavour(b"Scar_Spartan_R", 51)
+        );
+        vector::push_back(
+            scar_flavours,
+            new_flavour(b"Scar_Gaul_R", 102)
+        );
+        vector::push_back(
+            scar_flavours,
+            new_flavour(b"Scar_Barbarian_R", 153)
+        );
+        vector::push_back(
+            scar_flavours,
+            new_flavour(b"Scar_Samurai_R", 204)
+        );
+        vector::push_back(
+            scar_flavours,
+            new_flavour(b"Scar_Macedonian_R", 255)
+        );
+        let group_name = string::utf8(b"scar");
+        registry::append<Lemons, String, Flavour<String>>(admin, registry, &group_name, *scar_flavours);
     }
 
     // ================EntryPoints=====================
-    public fun mint(
+    public entry fun mint(
         registry: &mut Registry<Lemons, String, Flavour<String>>,
         randomness: &mut Randomness<Lemons>,
-        treasure: &mut Treasury,
+        treasury: &mut Treasury,
         mint_config: &mut MintConfig<Lemons>,
         sui: Coin<SUI>,
         ctx: &mut TxContext,
@@ -233,7 +326,7 @@ module lemon::lemons {
             mint_config::check_mint_lock(mint_config);
         };
 
-        put_in_treasure(treasure, sui);
+        put_in_treasure(treasury, sui);
         mint_config::increment_minted(mint_config);
         mint_config::increment_minted_for_account(mint_config, ctx);
 
@@ -256,7 +349,7 @@ module lemon::lemons {
         transfer::public_transfer(sui, tx_context::sender(ctx));
     }
 
-    public fun debug_setup(
+    public entry fun debug_setup(
         _: &AdminCap<Lemons>,
         config: &mut MintConfig<Lemons>,
         ctx: &mut TxContext,
